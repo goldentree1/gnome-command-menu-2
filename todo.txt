@@ -1,0 +1,14 @@
+TODO:
+Make work with GNOME46/47/48 <- ONLY 48 TESTED
+
+Add submenu icons <- DONE!
+
+Allow custom icons 
+
+Allow changing menu position (left/right/center)
+
+Allow multiple menus!
+
+Make .commands.json path changeable
+
+Make GUI for commands.json ... (apparently a react web one was in development?)
