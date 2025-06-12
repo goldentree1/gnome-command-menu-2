@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-	<schema id="org.gnome.shell.extensions.commandmenu" path="/org/gnome/shell/extensions/commandmenu/">
+	<schema id="org.gnome.shell.extensions.commandmenu2" path="/org/gnome/shell/extensions/commandmenu2/">
 		<key name="edit-button-visible" type="b">
 			<default>true</default>
 			<summary>Show Edit Button</summary>

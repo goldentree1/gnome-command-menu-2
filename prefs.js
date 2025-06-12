@@ -1,41 +1,20 @@
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Gio = imports.gi.Gio;
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
+//import Gio from 'gi://Gio';
+import Adw from 'gi://Adw';
 
-function getSettings () {
-  let GioSSS = Gio.SettingsSchemaSource;
-  let schemaSource = GioSSS.new_from_directory(
-    Me.dir.get_child("schemas").get_path(),
-    GioSSS.get_default(),
-    false
-  );
-  let schemaObj = schemaSource.lookup(
-    'org.gnome.shell.extensions.commandmenu', true);
-  if (!schemaObj) {
-    throw new Error('cannot find schemas');
-  }
-  return new Gio.Settings({ settings_schema : schemaObj });
-}
-
-function init () {
-}
-
-function buildPrefsWidget () {
-  let widget = new MyPrefsWidget();
-  widget.show();
-  return widget;
-}
+import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 const MyPrefsWidget = new GObject.Class({
   Name : "CommandMenu.Prefs.Widget",
   GTypeName : "CommandMenuPrefsWidget",
   Extends : Gtk.Box,
-  _init : function (params) {
+  _init : function (commandMenuExtensionPreferences, params) {
     this.parent(params);
     this.margin = 20;
     this.set_spacing(15);
     this.set_orientation(Gtk.Orientation.VERTICAL);
+    this.commandMenuExtensionPreferences = commandMenuExtensionPreferences;
 
     let myLabel = new Gtk.Label({
       label: "Translated Text"    
@@ -48,7 +27,7 @@ const MyPrefsWidget = new GObject.Class({
       hexpand: true,
   });
     
-    var settings = getSettings();
+    var settings = this.commandMenuExtensionPreferences.getSettings();
 
     let reloadBtn = new Gtk.Button({
       label: "Reload Extension"
@@ -109,3 +88,20 @@ const MyPrefsWidget = new GObject.Class({
   }
 });
 
+
+export default class CommandMenuExtensionPreferences extends ExtensionPreferences {
+  fillPreferencesWindow(window) {
+    window._settings = this.getSettings();
+    const page = new Adw.PreferencesPage();
+
+    const group = new Adw.PreferencesGroup({
+        title: _('Command Menu'),
+    });
+    page.add(group);
+
+    let widget = new MyPrefsWidget(this, {});
+    group.add(widget);
+
+    window.add(page);
+  }
+}
