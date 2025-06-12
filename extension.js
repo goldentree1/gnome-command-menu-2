@@ -49,7 +49,10 @@ export default class CommandMenuExtension extends Extension {
       if (cmd.type === 'submenu' && level === 0) { // Stop submenu from being added after the first level
         let submenu;
         if (!cmd.submenu) { return; }
-        submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title);
+        submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title, Boolean(cmd.icon));
+        if (cmd.icon) {
+          submenu.icon.icon_name = cmd.icon;
+        }
         this.populateMenuItems(submenu.menu, cmd.submenu, level + 1);
         menu.addMenuItem(submenu);
         return;
