@@ -135,7 +135,24 @@ export default class CommandMenuExtension extends Extension {
       type: 'separator'
     });
     this.commandMenuPopup = new CommandMenuPopup(this);
-    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
+
+    // TODO the code below works, we need to populate useLeft from preferences next
+    // TODO then fix this so indexing is customisable?
+    let useLeft = true;
+    if (useLeft) {
+      if (Main.panel._leftBox) {
+        Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, 1);
+      } else {
+        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 0); // fallback
+      }
+    } else {
+      if (Main.panel._rightBox) {
+        Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, 0);
+      } else {
+        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1); // fallback
+      }
+    }
+
   };
 
   enable() {
