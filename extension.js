@@ -42,7 +42,7 @@ export default class CommandMenuExtension extends Extension {
   loadIcon(iconStr, style_class) {
     let icon = null;
     if (iconStr && typeof iconStr === "string" && iconStr.length > 0) {
-      if (iconStr.includes("/") || iconStr.match(/\.(png|svg|jpg|jpeg|ico)$/i)) {
+      if (iconStr.includes("/") || iconStr.includes(".")) {
         // custom icon filepath
         let path = iconStr;
         try {
@@ -205,13 +205,12 @@ export default class CommandMenuExtension extends Extension {
         if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number") {
           index = 0;
         } else {
-          index = this.commands.index;
+          index = this.commands.index;this.commandMenuPopup?.destroy();
         }
         Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
       } else { // fallback
         Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
       }
-      Main.panel._.insert_child_at_index(this.commandMenuPopup.container, index);
     }
     else {
       if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number" || !Main.panel._rightBox) {
