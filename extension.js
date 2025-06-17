@@ -41,23 +41,23 @@ export default class CommandMenuExtension extends Extension {
 
   loadIcon(iconStr, style_class) {
     let icon = null;
-    if (iconStr && typeof iconStr === "string" && iconStr.length > 0) {
-      if (iconStr.includes("/") || iconStr.includes(".")) {
-        // custom icon filepath
+    if (iconStr && typeof iconStr === 'string' && iconStr.length > 0) {
+      if (iconStr.includes('/') || iconStr.includes('.')) {
+        // custom icon file
         let path = iconStr;
         try {
           // fix path for home aliases
-          if (path.startsWith("~/")) {
+          if (path.startsWith('~/')) {
             path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(1)])
-          } else if (path.startsWith("$HOME/")) {
+          } else if (path.startsWith('$HOME/')) {
             path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(5)])
-          } else if (!path.startsWith("/")) {
+          } else if (!path.startsWith('/')) {
             GLib.build_filenamev([GLib.get_home_dir(), path])
           }
           // try load icon
           const file = Gio.File.new_for_path(path);
           if (!file.query_exists(null)) {
-            throw new Error("file doesnt exist");
+            throw new Error('file doesnt exist');
           }
           const gicon = new Gio.FileIcon({ file });
           icon = new St.Icon({
@@ -123,18 +123,22 @@ export default class CommandMenuExtension extends Extension {
   redrawMenu(popUpMenu) {
     let menuTitle = this.commands.title && this.commands.title.length > 0 ? this.commands.title : "";
     let box = new St.BoxLayout();
-    if (this.commands.showIcon !== false || (menuTitle === "")) {
-      let icon = this.loadIcon(this.commands.icon, 'system-status-icon');
-      if (!icon) {
-        // fallback icon
-        icon = new St.Icon({
-          icon_name: "utilities-terminal-symbolic",
-          style_class: 'system-status-icon',
-        });
-      }
-      box.add_child(icon);
+   
+    // add icon
+    let icon = null;
+    if (this.commands.icon) {
+      icon = this.loadIcon(this.commands.icon, 'system-status-icon');
     }
+    if (!icon && menuTitle === "") {
+      // no icon or title: use fallback so its not empty
+      icon = new St.Icon({
+        icon_name: 'utilities-terminal-symbolic',
+        style_class: 'system-status-icon',
+      });
+    }
+    if (icon) box.add_child(icon);
 
+    // add title
     let toplabel = new St.Label({
       text: menuTitle,
       y_expand: true,
@@ -142,6 +146,8 @@ export default class CommandMenuExtension extends Extension {
     });
     box.add_child(toplabel);
     popUpMenu.add_child(box);
+
+    // populate menu
     let level = 0;
     this.populateMenuItems(popUpMenu.menu, this.commands.menu, level);
 
@@ -186,11 +192,11 @@ export default class CommandMenuExtension extends Extension {
     });
     this.commandMenuPopup = new CommandMenuPopup(this);
 
-    if (this.commands.position === "left") {
+    if (this.commands.position === 'left') {
       if (Main.panel._leftBox) {
         let index;
-        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number") {
-          index = 1; // after activities btn
+        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== 'number') {
+          index = 1; // default to after activities btn
         } else {
           index = this.commands.index;
         }
@@ -198,14 +204,13 @@ export default class CommandMenuExtension extends Extension {
       } else { // fallback
         Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
       }
-    } else if (this.commands.position === "center" || this.commands.position === "centre") {
-      // Center is BUGGY - needs login/logout cycle to register
+    } else if (this.commands.position === 'center' || this.commands.position === 'centre') {
       if (Main.panel._centerBox) {
         let index;
-        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number") {
+        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== 'number') {
           index = 0;
         } else {
-          index = this.commands.index;this.commandMenuPopup?.destroy();
+          index = this.commands.index; this.commandMenuPopup?.destroy();
         }
         Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
       } else { // fallback
@@ -213,7 +218,7 @@ export default class CommandMenuExtension extends Extension {
       }
     }
     else {
-      if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number" || !Main.panel._rightBox) {
+      if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== 'number' || !Main.panel._rightBox) {
         Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
       } else {
         Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, 0);
