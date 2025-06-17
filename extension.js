@@ -125,6 +125,7 @@ export default class CommandMenuExtension extends Extension {
         } else if (jsonContent instanceof Object && jsonContent.menu instanceof Array) {
           this.commands = jsonContent;
         }
+
       }
     } catch (e) {
       this.commands = {
@@ -136,23 +137,40 @@ export default class CommandMenuExtension extends Extension {
     });
     this.commandMenuPopup = new CommandMenuPopup(this);
 
-    // TODO the code below works, we need to populate useLeft from preferences next
-    // TODO then fix this so indexing is customisable?
-    let useLeft = true;
-    if (useLeft) {
+    if (this.commands.position === "left") {
       if (Main.panel._leftBox) {
-        Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, 1);
-      } else {
-        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 0); // fallback
+        let index;
+        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number") {
+          index = 1; // after activities btn
+        } else {
+          index = this.commands.index;
+        }
+        Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, index);
+      } else { // fallback
+        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
       }
-    } else {
-      if (Main.panel._rightBox) {
-        Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, 0);
+    } else if (this.commands.position === "center" || this.commands.position === "centre") {
+      // Center is BUGGY - needs login/logout cycle to register
+      if (Main.panel._centerBox) {
+        let index;
+        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number") {
+          index = 0;
+        } else {
+          index = this.commands.index;
+        }
+        Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
+      } else { // fallback
+        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
+      }
+      Main.panel._.insert_child_at_index(this.commandMenuPopup.container, index);
+    }
+    else {
+      if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== "number" || !Main.panel._rightBox) {
+        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
       } else {
-        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1); // fallback
+        Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, 0);
       }
     }
-
   };
 
   enable() {

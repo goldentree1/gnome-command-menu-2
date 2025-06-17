@@ -2,6 +2,8 @@
     "title": "Commands",
     "showIcon": true,
     "icon": "utilities-terminal",
+    "position": "left",
+    "index": "auto",
     "menu": [
         {
             "title": "Termimal",

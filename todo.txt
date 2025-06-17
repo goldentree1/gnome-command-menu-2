@@ -1,11 +1,11 @@
 TODO:
 Make work with GNOME46/47/48 <- ONLY 48 TESTED
 
-Add submenu icons <- NOT YET - but done in other
+Add submenu icons <- DONE
 
-Allow custom icons 
+Allow changing menu position (left/right/center) <- DONE
 
-Allow changing menu position (left/right/center)
+Allow custom icons  
 
 Allow multiple menus!
 
