@@ -1,17 +1,16 @@
 {
     "title": "Commands",
-    "showIcon": true,
-    "icon": "utilities-terminal",
-    "position": "left",
+    "icon": "utilities-terminal-symbolic",
+    "position": "center",
     "index": "auto",
     "menu": [
         {
-            "title": "Termimal",
+            "title": "Terminal",
             "command": "gnome-terminal",
             "icon": "utilities-terminal"
         },
         {
-            "title": "File Manager 3",
+            "title": "Files",
             "command": "nautilus",
             "icon": "folder"
         },
@@ -19,21 +18,37 @@
             "type": "separator"
         },
         {
-            "title": "Web Browser",
-            "command": "firefox",
-            "icon": "web-browser"
+            "title": "SSH Connections",
+            "icon": "/usr/share/icons/Adwaita/scalable/places/network-workgroup.svg",
+            "type": "submenu",
+            "submenu": [
+                {
+                    "title": "Connect to Server #1",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server1'"
+                },
+                {
+                    "title": "Connect to Server #2",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server2'",
+                    "icon": "~/.icons/my-custom-icon.jpg"
+                }
+            ]
         },
         {
             "type": "separator"
         },
         {
-            "title": "SSH Connections",
+            "title": "Scripts & Helpers",
             "type": "submenu",
             "submenu": [
                 {
-                    "title": "Connect to Server (SSH)",
-                    "command": "gnome-terminal -- bash -c 'ssh root@10.144.1.2 -p 8022'",
-                    "icon": "utilities-terminal"
+                    "title": "Update System",
+                    "icon": "system-software-update",
+                    "command":"notify-send 'Updating packages...'"
+                },
+                {
+                    "title": "Backup My Files",
+                    "icon": "document-save-symbolic",
+                    "command": "notify-send 'Backing up files...'"
                 }
             ]
         }
