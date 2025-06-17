@@ -5,7 +5,7 @@ Add submenu icons <- DONE
 
 Allow changing menu position (left/right/center) <- DONE
 
-Allow custom icons  
+Allow custom icons <- DONE
 
 Allow multiple menus!
 
