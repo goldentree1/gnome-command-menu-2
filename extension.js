@@ -56,6 +56,9 @@ export default class CommandMenuExtension extends Extension {
           }
           // try load icon
           const file = Gio.File.new_for_path(path);
+          if (!file.query_exists(null)) {
+            throw new Error("file doesnt exist");
+          }
           const gicon = new Gio.FileIcon({ file });
           icon = new St.Icon({
             gicon,
