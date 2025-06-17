@@ -123,7 +123,7 @@ export default class CommandMenuExtension extends Extension {
   redrawMenu(popUpMenu) {
     let menuTitle = this.commands.title && this.commands.title.length > 0 ? this.commands.title : "";
     let box = new St.BoxLayout();
-   
+
     // add icon
     let icon = null;
     if (this.commands.icon) {
@@ -191,40 +191,31 @@ export default class CommandMenuExtension extends Extension {
       type: 'separator'
     });
     this.commandMenuPopup = new CommandMenuPopup(this);
+    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
 
-    if (this.commands.position === 'left') {
-      if (Main.panel._leftBox) {
-        let index;
-        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== 'number') {
-          index = 1; // default to after activities btn
-        } else {
-          index = this.commands.index;
-        }
-        Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, index);
-      } else { // fallback
-        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
-      }
-    } else if (this.commands.position === 'center' || this.commands.position === 'centre') {
-      if (Main.panel._centerBox) {
-        let index;
-        if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== 'number') {
-          index = 0;
-        } else {
-          index = this.commands.index; this.commandMenuPopup?.destroy();
-        }
-        Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
-      } else { // fallback
-        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
-      }
-    }
-    else {
-      if ((!this.commands.index && this.commands.index != 0) || typeof this.commands.index !== 'number' || !Main.panel._rightBox) {
-        Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
+    // re-position menu based on user prefs
+    let index;
+    if (this.commands.position === 'left' && Main.panel._leftBox) {
+      if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number') {
+        index = 1; // default to after activities btn
       } else {
-        Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, 0);
+        index = this.commands.index;
       }
+      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
+      Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, index);
+    } else if ((this.commands.position === 'center' || this.commands.position === 'centre') && Main.panel._centerBox) {
+      if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number') {
+        index = 0;
+      } else {
+        index = this.commands.index;
+      }
+      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
+      Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
+    } else if (this.commands.position === 'right' && (this.commands.index || this.commands.index === 0) && typeof this.commands.index === 'number' && Main.panel._rightBox) {
+      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
+      Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, this.commands.index);
     }
-  };
+  }
 
   enable() {
     this.commandMenuSettings = this.getSettings();
@@ -235,7 +226,7 @@ export default class CommandMenuExtension extends Extension {
     this.commandMenuSettingsId.push(this.commandMenuSettings.connect('changed::edit-counter', () => {
       this.editCommandsFile();
     }));
-  };
+  }
 
   disable() {
     this.commandMenuSettingsId.forEach(id => {
@@ -246,5 +237,5 @@ export default class CommandMenuExtension extends Extension {
     this.commandMenuPopup.destroy();
     this.commandMenuPopup = null;
     this.commands = {};
-  };
+  }
 }
