@@ -82,25 +82,28 @@ export default class CommandMenuExtension extends Extension {
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         return;
       }
-      if (!cmd.title) { return; }
-      if (cmd.type === 'submenu' && level === 0) { // Stop submenu from being added after the first level
-        let submenu;
-        if (!cmd.submenu) { return; }
-        submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title, Boolean(cmd.icon));
+
+      if (!cmd.title) return;
+
+      if (cmd.type === 'submenu' && level === 0) {
+        if (!cmd.submenu) return;
+        const submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title);
         if (cmd.icon) {
-          submenu.icon.icon_name = cmd.icon;
+          const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+          if (icon)
+            submenu.insert_child_at_index(icon, 1);
         }
         this.populateMenuItems(submenu.menu, cmd.submenu, level + 1);
         menu.addMenuItem(submenu);
         return;
       }
-      if (!cmd.command) { return; }
+
+      if (!cmd.command) return;
 
       let item = new PopupMenu.PopupBaseMenuItem();
       let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
       if (icon)
         item.add_child(icon);
-
       let label = new St.Label({
         text: cmd.title,
         x_expand: true,
@@ -111,7 +114,7 @@ export default class CommandMenuExtension extends Extension {
         GLib.spawn_command_line_async(cmd.command);
       });
       menu.addMenuItem(item);
-    })
+    });
   }
 
   redrawMenu(popUpMenu) {
