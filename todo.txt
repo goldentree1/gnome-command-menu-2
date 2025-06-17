@@ -1,14 +1,10 @@
-TODO:
-Make work with GNOME46/47/48 <- ONLY 48 TESTED
+Done:
+ - GNOME 48
+ - Submenu icons
+ - Custom file icons
+ - Change menu position (left/right/center)
 
-Add submenu icons <- DONE
-
-Allow changing menu position (left/right/center) <- DONE
-
-Allow custom icons <- DONE
-
-Allow multiple menus!
-
-Make .commands.json path changeable
-
-Make GUI for commands.json ... (apparently a react web one was in development?)
+Todo:
+ - Allow multiple menus!
+ - Make .commands.json path changeable
+ - GUI for commands.json ... (apparently a react web one was in development?). Editing from Extension Manager would be ideal.
