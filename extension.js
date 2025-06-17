@@ -39,6 +39,43 @@ export default class CommandMenuExtension extends Extension {
     Gio.AppInfo.launch_default_for_uri('file://' + GLib.get_home_dir() + '/.commands.json', null).launch(null, null);
   }
 
+  loadIcon(iconStr, style_class) {
+    let icon = null;
+    if (iconStr && typeof iconStr === "string" && iconStr.length > 0) {
+      if (iconStr.includes("/") || iconStr.match(/\.(png|svg|jpg|jpeg|ico)$/i)) {
+        // custom icon filepath
+        let path = iconStr;
+        try {
+          // fix path for home aliases
+          if (path.startsWith("~/")) {
+            path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(1)])
+          } else if (path.startsWith("$HOME/")) {
+            path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(5)])
+          } else if (!path.startsWith("/")) {
+            GLib.build_filenamev([GLib.get_home_dir(), path])
+          }
+          // try load icon
+          const file = Gio.File.new_for_path(path);
+          const gicon = new Gio.FileIcon({ file });
+          icon = new St.Icon({
+            gicon,
+            style_class,
+          });
+        } catch (err) {
+          // fallback to default if custom fails
+          logError(`failed to load icon from "${path}":`, err);
+        }
+      } else {
+        // system icon
+        icon = new St.Icon({
+          icon_name: iconStr,
+          style_class,
+        });
+      }
+    }
+    return icon;
+  }
+
   populateMenuItems(menu, cmds, level) {
     cmds.forEach((cmd) => {
       if (cmd.type === 'separator') {
@@ -58,43 +95,18 @@ export default class CommandMenuExtension extends Extension {
         return;
       }
       if (!cmd.command) { return; }
-      let item;
-      if (cmd.icon) {
-        if (cmd.icon.includes('/') || cmd.icon.match(/\.(png|svg|jpg|jpeg|ico|webp)$/i)) {
-          // Custom file-based icon
-          let path = cmd.icon;
-          try {
-            if (path.startsWith("~/")) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(1)]);
-            } else if (path.startsWith("$HOME/")) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(6)]);
-            } else if (!path.startsWith("/")) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path]);
-            }
 
-            const file = Gio.File.new_for_path(path);
-            const gicon = new Gio.FileIcon({ file });
-            const icon = new St.Icon({ gicon, style_class: 'popup-menu-icon' });
+      let item = new PopupMenu.PopupBaseMenuItem();
+      let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+      if (icon)
+        item.add_child(icon);
 
-            // Build item manually
-            item = new PopupMenu.PopupBaseMenuItem();
-            item.add_child(icon);
-            item.add_child(new St.Label({
-              text: cmd.title,
-              x_expand: true,
-              y_align: Clutter.ActorAlign.CENTER
-            }));
-          } catch (err) {
-            logError(`failed to load submenu icon from ${path}, using default (no icon):`, err);
-            item = new PopupMenu.PopupMenuItem(cmd.title);
-          }
-        } else {
-          // System icon
-          item = new PopupMenu.PopupImageMenuItem(cmd.title, cmd.icon);
-        }
-      } else {
-        item = new PopupMenu.PopupMenuItem(cmd.title);
-      }
+      let label = new St.Label({
+        text: cmd.title,
+        x_expand: true,
+        y_align: Clutter.ActorAlign.CENTER
+      });
+      item.add_child(label);
       item.connect('activate', () => {
         GLib.spawn_command_line_async(cmd.command);
       });
@@ -106,46 +118,9 @@ export default class CommandMenuExtension extends Extension {
     let menuTitle = this.commands.title && this.commands.title.length > 0 ? this.commands.title : "";
     let box = new St.BoxLayout();
     if (this.commands.showIcon !== false || (menuTitle === "")) {
-
-      let icon;
-
-      if (this.commands.icon && typeof this.commands.icon === "string" && this.commands.icon.length > 0) {
-        if (this.commands.icon.includes("/") || this.commands.icon.match(/\.(png|svg|jpg|jpeg|ico)$/i)) {
-          // custom icon filepath
-          let path = this.commands.icon;
-          try {
-            // fix path for home aliases
-            if (path.startsWith("~/")) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(1)])
-            } else if (path.startsWith("$HOME/")) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(5)])
-            } else if (!path.startsWith("/")) {
-              GLib.build_filenamev([GLib.get_home_dir(), path])
-            }
-            // try load icon
-            const file = Gio.File.new_for_path(path);
-            const gicon = new Gio.FileIcon({ file });
-            icon = new St.Icon({
-              gicon,
-              style_class: "system-status-icon",
-            })
-          } catch (err) {
-            // fallback to default if custom fails
-            logError(`failed to load icon from "${path}", using default icon:`, err);
-            icon = new St.Icon({
-              icon_name: "utilities-terminal-symbolic",
-              style_class: 'system-status-icon',
-            });
-          }
-        } else {
-          // system icon
-          icon = new St.Icon({
-            icon_name: this.commands.icon,
-            style_class: 'system-status-icon',
-          });
-        }
-      } else {
-        // default icon
+      let icon = this.loadIcon(this.commands.icon, 'system-status-icon');
+      if (!icon) {
+        // fallback icon
         icon = new St.Icon({
           icon_name: "utilities-terminal-symbolic",
           style_class: 'system-status-icon',
