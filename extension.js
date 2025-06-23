@@ -228,34 +228,37 @@ export default class CommandMenuExtension extends Extension {
         menu: []
       };
     }
-    this.commandMenus[0].commands.menu.push({
-      type: 'separator'
-    });
-    log("commandMenus" + 0 + ": ", this.commandMenus[0].commands)
-    this.commandMenus[0].commandMenuPopup = new CommandMenuPopup(this);
-    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenus[0].commandMenuPopup, 1);
-
-    // re-position menu based on user prefs
-    let index;
-    if (this.commandMenus[0].commands.position === 'left' && Main.panel._leftBox) {
-      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
-        index = 1; // default to after activities btn
-      } else {
-        index = this.commandMenus[0].commands.index;
+    
+    for(let i = 0; i < this.commandMenus.length;i++){
+      this.commandMenus[i].commands.menu.push({
+        type: 'separator'
+      });
+      log("commandMenus" + 0 + ": ", this.commandMenus[i].commands)
+      this.commandMenus[i].commandMenuPopup = new CommandMenuPopup(this);
+      Main.panel.addToStatusArea(`commandMenuPopup${i}`, this.commandMenus[i].commandMenuPopup, 1);
+  
+      // re-position menu based on user prefs
+      let index;
+      if (this.commandMenus[i].commands.position === 'left' && Main.panel._leftBox) {
+        if ((!this.commandMenus[i].commands.index && this.commandMenus[i].commands.index !== 0) || typeof this.commandMenus[i].commands.index !== 'number') {
+          index = 1; // default to after activities btn
+        } else {
+          index = this.commandMenus[i].commands.index;
+        }
+        this.commandMenus[i].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[i].commandMenuPopup.container);
+        Main.panel._leftBox.insert_child_at_index(this.commandMenus[i].commandMenuPopup.container, index);
+      } else if ((this.commandMenus[i].commands.position === 'center' || this.commandMenus[i].commands.position === 'centre') && Main.panel._centerBox) {
+        if ((!this.commandMenus[i].commands.index && this.commandMenus[i].commands.index !== 0) || typeof this.commandMenus[i].commands.index !== 'number') {
+          index = 0;
+        } else {
+          index = this.commandMenus[i].commands.index;
+        }
+        this.commandMenus[i].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[i].commandMenuPopup.container);
+        Main.panel._centerBox.insert_child_at_index(this.commandMenus[i].commandMenuPopup.container, index);
+      } else if (this.commandMenus[i].commands.position === 'right' && (this.commandMenus[i].commands.index || this.commandMenus[i].commands.index === 0) && typeof this.commandMenus[i].commands.index === 'number' && Main.panel._rightBox) {
+        this.commandMenus[i].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[i].commandMenuPopup.container);
+        Main.panel._rightBox.insert_child_at_index(this.commandMenus[i].commandMenuPopup.container, this.commandMenus[i].commands.index);
       }
-      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
-      Main.panel._leftBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
-    } else if ((this.commandMenus[0].commands.position === 'center' || this.commandMenus[0].commands.position === 'centre') && Main.panel._centerBox) {
-      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
-        index = 0;
-      } else {
-        index = this.commandMenus[0].commands.index;
-      }
-      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
-      Main.panel._centerBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
-    } else if (this.commandMenus[0].commands.position === 'right' && (this.commandMenus[0].commands.index || this.commandMenus[0].commands.index === 0) && typeof this.commandMenus[0].commands.index === 'number' && Main.panel._rightBox) {
-      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
-      Main.panel._rightBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, this.commandMenus[0].commands.index);
     }
   }
 
