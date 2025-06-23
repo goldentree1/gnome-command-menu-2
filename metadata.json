@@ -1,12 +1,12 @@
 {
-  "description": "A GNOME Shell Extension to manage shortcuts in the top bar (forked from Command Menu by arunk140). Edit the .commands.json file to add your own shortcuts.\n\nSample Config in the README - https://github.com/arunk140/gnome-command-menu/blob/main/README.md",
+  "description": "A GNOME Shell Extension to manage shortcuts in the top bar (forked from Command Menu by arunk140). Edit the .commands.json file to add your own shortcuts.",
   "name": "Command Menu 2",
   "shell-version": [
     "46", 
     "47",
     "48"
   ],
-  "url": "https://github.com/arunk140/gnome-command-menu",
+  "url": "https://github.com/goldentree1/gnome-command-menu-2",
   "uuid": "command-menu2@goldentree1.github.com",
   "version": 8,
   "settings-schema": "org.gnome.shell.extensions.commandmenu2"

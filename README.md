@@ -1,6 +1,17 @@
-### Command Menu for GNOME Top Bar
+# GNOME Command Menu 2 Extension
 
-[<img src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true" alt="Get it on GNOME Extensions" height="100" align="middle">][ego] 
+This GNOME Shell Extension is a highly-customisable menu to manage shortcuts in the top bar. 
+
+This project is forked from [Command Menu by arunk140] and it adds the following features:
+- GNOME 48 supported
+- Submenus can have icons
+- Icons can be loaded from a file
+- Change the menu position (left, center, right)
+- Change the index position (for example, you could place the menu on the left OR right of the activities button)
+
+
+
+<!-- [<img src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true" alt="Get it on GNOME Extensions" height="100" align="middle">][ego]  -->
 
 [ego]: https://extensions.gnome.org/extension/4850/command-menu/
 
@@ -53,32 +64,21 @@ For Icon Names - https://specifications.freedesktop.org/icon-naming-spec/latest/
 ]
 ```
 
-```
-Note:
-examples/.commands-full.json is supported in versions >= 5
-```
+## Installation
 
----
+This extension is not available on [GNOME Extensions](https://extensions.gnome.org/) yet, but it can be manually installed:
 
-#### New Feature (Work in Progress) - Web Editor for .commands.json 
+1. Install the extension:
+    ```bash
+    git clone https://github.com/goldentree1/gnome-command-menu-2
+    cd gnome-command-menu
+    bash install.sh 
+    ```
 
-https://github.com/arunk140/gnome-command-menu-editor
+    You may need to logout and login again so the extension is recognised!
 
----
-
-#### Generate Build Zip
-
-```
-glib-compile-schemas schemas
-zip gnome-command-menu.zip icon.svg metadata.json extension.js prefs.js schemas/org.gnome.shell.extensions.commandmenu.gschema.xml schemas/gschemas.compiled README.md LICENSE
-```
-
-#### Manual Install
-
-```
-git clone https://github.com/arunk140/gnome-command-menu.git
-cd gnome-command-menu
-glib-compile-schemas schemas
-gnome-extensions pack
-gnome-extensions install command-menu@arunk140.com.shell-extension.zip
-```
+2. Enable it:
+    ```bash
+    gnome-extensions enable command-menu2@goldentree1.github.com
+    ```
+    Or alternatively, use [Extension Manager](https://flathub.org/apps/com.mattjakeman.ExtensionManager) to enable it.
