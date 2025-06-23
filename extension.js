@@ -32,8 +32,10 @@ export default class CommandMenuExtension extends Extension {
   }];
 
   reloadExtension() {
-    this.commandMenus[0].commands = {};
-    this.commandMenus[0].commandMenuPopup.destroy();
+    for(let i = 0; i < this.commandMenus.length; i++){
+      this.commandMenus[i].commands = {};
+      this.commandMenus[i].commandMenuPopup.destroy();
+    }
     this.addCommandMenu();
   }
 
@@ -262,54 +264,6 @@ export default class CommandMenuExtension extends Extension {
     }
   }
 
-  addCommandMenu__() {
-    var filePath = ".commands.json";
-    var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
-    try {
-      var [ok, contents, _] = file.load_contents(null);
-      if (ok) {
-        var jsonContent = JSON.parse(contents);
-        if (jsonContent instanceof Array) {
-          this.commandMenus[0].commands['menu'] = jsonContent;
-        } else if (jsonContent instanceof Object && jsonContent.menu instanceof Array) {
-          this.commandMenus[0].commands = jsonContent;
-        }
-      }
-    } catch (e) {
-      this.commandMenus[0].commands = {
-        menu: []
-      };
-    }
-    this.commandMenus[0].commands.menu.push({
-      type: 'separator'
-    });
-    this.commandMenus[0].commandMenuPopup = new CommandMenuPopup(this);
-    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenus[0].commandMenuPopup, 1);
-
-    // re-position menu based on user prefs
-    let index;
-    if (this.commandMenus[0].commands.position === 'left' && Main.panel._leftBox) {
-      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
-        index = 1; // default to after activities btn
-      } else {
-        index = this.commandMenus[0].commands.index;
-      }
-      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
-      Main.panel._leftBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
-    } else if ((this.commandMenus[0].commands.position === 'center' || this.commandMenus[0].commands.position === 'centre') && Main.panel._centerBox) {
-      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
-        index = 0;
-      } else {
-        index = this.commandMenus[0].commands.index;
-      }
-      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
-      Main.panel._centerBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
-    } else if (this.commandMenus[0].commands.position === 'right' && (this.commandMenus[0].commands.index || this.commandMenus[0].commands.index === 0) && typeof this.commandMenus[0].commands.index === 'number' && Main.panel._rightBox) {
-      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
-      Main.panel._rightBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, this.commandMenus[0].commands.index);
-    }
-  }
-
   enable() {
     this.commandMenus[0].commandMenuSettings = this.getSettings();
     this.addCommandMenu();
@@ -322,13 +276,15 @@ export default class CommandMenuExtension extends Extension {
   }
 
   disable() {
-    this.commandMenus[0].commandMenuSettingsId.forEach(id => {
-      this.commandMenus[0].commandMenuSettings.disconnect(id);
-    });
-    this.commandMenus[0].commandMenuSettingsId = [];
-    this.commandMenus[0].commandMenuSettings = null;
-    this.commandMenus[0].commandMenuPopup.destroy();
-    this.commandMenus[0].commandMenuPopup = null;
-    this.commandMenus[0].commands = {};
+    for(let i = 0; i < this.commandMenus.length; i++){
+      this.commandMenus[i].commandMenuSettingsId.forEach(id => {
+        this.commandMenus[i].commandMenuSettings.disconnect(id);
+      });
+      this.commandMenus[i].commandMenuSettingsId = [];
+      this.commandMenus[i].commandMenuSettings = null;
+      this.commandMenus[i].commandMenuPopup.destroy();
+      this.commandMenus[i].commandMenuPopup = null;
+      this.commandMenus[i].commands = {};
+    }
   }
 }
