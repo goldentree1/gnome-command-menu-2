@@ -23,9 +23,17 @@ export default class CommandMenuExtension extends Extension {
   commands = {};
   commandMenuSettingsId = [];
 
+  /** @type {{commandMenuPopup:CommandMenuPopup, commands:Object|Array, commandMenuSettings:any,commandMenuSettingsId:Array}} */
+  commandMenus = [{
+    commandMenuPopup: null,
+    commandMenuSettings: null,
+    commands: {},
+    commandMenuSettingsId: [],
+  }];
+
   reloadExtension() {
-    this.commands = {};
-    this.commandMenuPopup.destroy();
+    this.commandMenus[0].commands = {};
+    this.commandMenus[0].commandMenuPopup.destroy();
     this.addCommandMenu();
   }
 
@@ -33,7 +41,7 @@ export default class CommandMenuExtension extends Extension {
     // Check if ~/.commands.json exsists (if not create it)
     let file = Gio.file_new_for_path(GLib.get_home_dir() + '/.commands.json');
     if (!file.query_exists(null)) {
-      file.replace_contents(JSON.stringify(commands), null, false, 0, null);
+      file.replace_contents(JSON.stringify(this.commandMenus[0].commands), null, false, 0, null);
     }
     // Edit ~/.commands.json
     Gio.AppInfo.launch_default_for_uri('file://' + GLib.get_home_dir() + '/.commands.json', null).launch(null, null);
@@ -121,13 +129,13 @@ export default class CommandMenuExtension extends Extension {
   }
 
   redrawMenu(popUpMenu) {
-    let menuTitle = this.commands.title && this.commands.title.length > 0 ? this.commands.title : "";
+    let menuTitle = this.commandMenus[0].commands.title && this.commandMenus[0].commands.title.length > 0 ? this.commandMenus[0].commands.title : "";
     let box = new St.BoxLayout();
 
     // add icon
     let icon = null;
-    if (this.commands.icon) {
-      icon = this.loadIcon(this.commands.icon, 'system-status-icon');
+    if (this.commandMenus[0].commands.icon) {
+      icon = this.loadIcon(this.commandMenus[0].commands.icon, 'system-status-icon');
     }
     if (!icon && menuTitle === "") {
       // no icon or title: use fallback so its not empty
@@ -149,9 +157,9 @@ export default class CommandMenuExtension extends Extension {
 
     // populate menu
     let level = 0;
-    this.populateMenuItems(popUpMenu.menu, this.commands.menu, level);
+    this.populateMenuItems(popUpMenu.menu, this.commandMenus[0].commands.menu, level);
 
-    if (this.commandMenuSettings.get_boolean('edit-button-visible')) {
+    if (this.commandMenus[0].commandMenuSettings.get_boolean('edit-button-visible')) {
       let editBtn = new PopupMenu.PopupMenuItem('Edit Commands');
       editBtn.connect('activate', () => {
         this.editCommandsFile();
@@ -159,7 +167,7 @@ export default class CommandMenuExtension extends Extension {
       popUpMenu.menu.addMenuItem(editBtn);
     }
 
-    if (this.commandMenuSettings.get_boolean('reload-button-visible')) {
+    if (this.commandMenus[0].commandMenuSettings.get_boolean('reload-button-visible')) {
       let reloadBtn = new PopupMenu.PopupMenuItem('Reload');
       reloadBtn.connect('activate', () => {
         this.reloadExtension();
@@ -176,66 +184,66 @@ export default class CommandMenuExtension extends Extension {
       if (ok) {
         var jsonContent = JSON.parse(contents);
         if (jsonContent instanceof Array) {
-          this.commands['menu'] = jsonContent;
+          this.commandMenus[0].commands['menu'] = jsonContent;
         } else if (jsonContent instanceof Object && jsonContent.menu instanceof Array) {
-          this.commands = jsonContent;
+          this.commandMenus[0].commands = jsonContent;
         }
 
       }
     } catch (e) {
-      this.commands = {
+      this.commandMenus[0].commands = {
         menu: []
       };
     }
-    this.commands.menu.push({
+    this.commandMenus[0].commands.menu.push({
       type: 'separator'
     });
-    this.commandMenuPopup = new CommandMenuPopup(this);
-    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
+    this.commandMenus[0].commandMenuPopup = new CommandMenuPopup(this);
+    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenus[0].commandMenuPopup, 1);
 
     // re-position menu based on user prefs
     let index;
-    if (this.commands.position === 'left' && Main.panel._leftBox) {
-      if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number') {
+    if (this.commandMenus[0].commands.position === 'left' && Main.panel._leftBox) {
+      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
         index = 1; // default to after activities btn
       } else {
-        index = this.commands.index;
+        index = this.commandMenus[0].commands.index;
       }
-      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
-      Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, index);
-    } else if ((this.commands.position === 'center' || this.commands.position === 'centre') && Main.panel._centerBox) {
-      if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number') {
+      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
+      Main.panel._leftBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
+    } else if ((this.commandMenus[0].commands.position === 'center' || this.commandMenus[0].commands.position === 'centre') && Main.panel._centerBox) {
+      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
         index = 0;
       } else {
-        index = this.commands.index;
+        index = this.commandMenus[0].commands.index;
       }
-      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
-      Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
-    } else if (this.commands.position === 'right' && (this.commands.index || this.commands.index === 0) && typeof this.commands.index === 'number' && Main.panel._rightBox) {
-      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
-      Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, this.commands.index);
+      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
+      Main.panel._centerBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
+    } else if (this.commandMenus[0].commands.position === 'right' && (this.commandMenus[0].commands.index || this.commandMenus[0].commands.index === 0) && typeof this.commandMenus[0].commands.index === 'number' && Main.panel._rightBox) {
+      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
+      Main.panel._rightBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, this.commandMenus[0].commands.index);
     }
   }
 
   enable() {
-    this.commandMenuSettings = this.getSettings();
+    this.commandMenus[0].commandMenuSettings = this.getSettings();
     this.addCommandMenu();
-    this.commandMenuSettingsId.push(this.commandMenuSettings.connect('changed::restart-counter', () => {
+    this.commandMenus[0].commandMenuSettingsId.push(this.commandMenus[0].commandMenuSettings.connect('changed::restart-counter', () => {
       this.reloadExtension();
     }));
-    this.commandMenuSettingsId.push(this.commandMenuSettings.connect('changed::edit-counter', () => {
+    this.commandMenus[0].commandMenuSettingsId.push(this.commandMenus[0].commandMenuSettings.connect('changed::edit-counter', () => {
       this.editCommandsFile();
     }));
   }
 
   disable() {
-    this.commandMenuSettingsId.forEach(id => {
-      this.commandMenuSettings.disconnect(id);
+    this.commandMenus[0].commandMenuSettingsId.forEach(id => {
+      this.commandMenus[0].commandMenuSettings.disconnect(id);
     });
-    this.commandMenuSettingsId = [];
-    this.commandMenuSettings = null;
-    this.commandMenuPopup.destroy();
-    this.commandMenuPopup = null;
-    this.commands = {};
+    this.commandMenus[0].commandMenuSettingsId = [];
+    this.commandMenus[0].commandMenuSettings = null;
+    this.commandMenus[0].commandMenuPopup.destroy();
+    this.commandMenus[0].commandMenuPopup = null;
+    this.commandMenus[0].commands = {};
   }
 }
