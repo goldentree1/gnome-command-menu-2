@@ -177,6 +177,89 @@ export default class CommandMenuExtension extends Extension {
   }
 
   addCommandMenu() {
+    const filePath = ".commands.json";
+    const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
+    try {
+      const [ok, contents, _] = file.load_contents(null);
+      if (ok) {
+
+        const jsonContent = JSON.parse(contents);
+        if (jsonContent instanceof Array) {
+          for (let i = 0; i < jsonContent.length; i++) {
+            if (!this.commandMenus[i]) {
+              this.commandMenus[i] = {
+                commandMenuPopup: null,
+                commandMenuSettings: null,
+                commands: {},
+                commandMenuSettingsId: [],
+              };
+            }
+            this.commandMenus[i].commands = jsonContent[i]; // or the parsing logic you need
+          }
+
+          let cnt = 0;
+          for (const item of jsonContent) {
+            if (item instanceof Array || (item instanceof Object && item['menu']))
+              cnt++;
+          }
+          log("jsonContent:", jsonContent);
+          if (cnt == jsonContent.length) {
+            // PARSE OK - THIS IS MULTI.
+            for (let i = 0; i < cnt; i++) {
+              // this.commandMenus[i].commands
+              log("jsonContent" + i + ": ", jsonContent[i]);
+              if (jsonContent[i] instanceof Array) {
+                this.commandMenus[i].commands['menu'] = jsonContent[i];
+              } else if (jsonContent[i] instanceof Object && jsonContent[i].menu instanceof Array) {
+                this.commandMenus[i].commands = jsonContent[i];
+              }
+              log("commandMenus" + i + ": ", this.commandMenus[i].commands)
+            }
+          } else {
+            this.commandMenus[0].commands['menu'] = jsonContent;
+          }
+        } else if (jsonContent instanceof Object && jsonContent.menu instanceof Array) {
+          this.commandMenus[0].commands = jsonContent;
+        }
+      }
+    } catch (e) {
+      logError("ERROR! Revert to default commands", e.message)
+      this.commandMenus[0].commands = {
+        menu: []
+      };
+    }
+    this.commandMenus[0].commands.menu.push({
+      type: 'separator'
+    });
+    log("commandMenus" + 0 + ": ", this.commandMenus[0].commands)
+    this.commandMenus[0].commandMenuPopup = new CommandMenuPopup(this);
+    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenus[0].commandMenuPopup, 1);
+
+    // re-position menu based on user prefs
+    let index;
+    if (this.commandMenus[0].commands.position === 'left' && Main.panel._leftBox) {
+      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
+        index = 1; // default to after activities btn
+      } else {
+        index = this.commandMenus[0].commands.index;
+      }
+      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
+      Main.panel._leftBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
+    } else if ((this.commandMenus[0].commands.position === 'center' || this.commandMenus[0].commands.position === 'centre') && Main.panel._centerBox) {
+      if ((!this.commandMenus[0].commands.index && this.commandMenus[0].commands.index !== 0) || typeof this.commandMenus[0].commands.index !== 'number') {
+        index = 0;
+      } else {
+        index = this.commandMenus[0].commands.index;
+      }
+      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
+      Main.panel._centerBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, index);
+    } else if (this.commandMenus[0].commands.position === 'right' && (this.commandMenus[0].commands.index || this.commandMenus[0].commands.index === 0) && typeof this.commandMenus[0].commands.index === 'number' && Main.panel._rightBox) {
+      this.commandMenus[0].commandMenuPopup.container.get_parent()?.remove_child(this.commandMenus[0].commandMenuPopup.container);
+      Main.panel._rightBox.insert_child_at_index(this.commandMenus[0].commandMenuPopup.container, this.commandMenus[0].commands.index);
+    }
+  }
+
+  addCommandMenu__() {
     var filePath = ".commands.json";
     var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
     try {
@@ -188,7 +271,6 @@ export default class CommandMenuExtension extends Extension {
         } else if (jsonContent instanceof Object && jsonContent.menu instanceof Array) {
           this.commandMenus[0].commands = jsonContent;
         }
-
       }
     } catch (e) {
       this.commandMenus[0].commands = {
