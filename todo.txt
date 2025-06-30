@@ -1,10 +1,11 @@
 Done:
  - GNOME 48
  - Submenu icons
- - Custom file icons
- - Change menu position (left/right/center)
+ - Custom filepath icons
+ - Change menu position (left/right/center) and indexing
 
 Todo:
  - Allow multiple menus!
  - Make .commands.json path changeable
- - GUI for commands.json ... (apparently a react web one was in development?). Editing from Extension Manager would be ideal.
+ - Nested submenus
+ - GUI for .commands.json ... (apparently a react web one was in development?). Editing from Extension Manager would be ideal.

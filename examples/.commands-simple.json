@@ -15,7 +15,7 @@
     {
         "title": "SSH Connections",
         "type": "submenu",
-        "icon": "/usr/share/icons/Adwaita/scalable/places/network-workgroup.svg",
+        "icon": "network-workgroup",
         "submenu": [
             {
                 "title": "Connect to Server #1",

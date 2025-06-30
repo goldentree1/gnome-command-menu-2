@@ -1,72 +1,22 @@
 # GNOME Command Menu 2 Extension
 
-This GNOME Shell Extension is a highly-customisable menu to manage shortcuts in the top bar. 
+This GNOME Shell Extension is a highly-customisable menu to manage shortcuts in the top bar.
 
-This project is forked from [Command Menu by arunk140] and it adds the following features:
-- GNOME 48 supported
+TODO insert example images here!
+
+This project is forked from [Command Menu by arunk140](https://github.com/arunk140/gnome-command-menu) and includes changes I gradually made to keep it working throughout recent GNOME versions (46+). 
+
+It also adds the following features:
 - Submenus can have icons
-- Icons can be loaded from a file
-- Change the menu position (left, center, right)
+- Icons can be loaded from a filepath
+- Change the menu position (left, center, or right)
 - Change the index position (for example, you could place the menu on the left OR right of the activities button)
-
-
-
-<!-- [<img src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true" alt="Get it on GNOME Extensions" height="100" align="middle">][ego]  -->
-
-[ego]: https://extensions.gnome.org/extension/4850/command-menu/
-
-GNOME shell extension to manage command shortcuts in the GNOME Top Bar.
-
-Inspired by Shuttle and SSHMenu.
-
-![Command Menu Example Screenshot](Screenshot-Example.png "Command Menu Example Screenshot")
-
-For Icon Names - https://specifications.freedesktop.org/icon-naming-spec/latest/ar01s04.html
 
 ---
 
-#### Example ~/.commands.json (Check the examples folder for more..)
-
-```
-[
-    {
-        "title": "Termimal",
-        "command": "gnome-terminal",
-        "icon": "utilities-terminal"
-    },
-    {
-        "title": "File Manager 3",
-        "command": "nautilus",
-        "icon": "folder"
-    },
-    {
-        "type": "separator"
-    },
-    {
-        "title": "Web Browser",
-        "command": "firefox",
-        "icon": "web-browser"
-    },
-    {
-        "type": "separator"
-    },
-    {
-        "title": "SSH Connections",
-        "type": "submenu",
-        "submenu": [
-            {
-                "title": "Connect to Server (SSH)",
-                "command": "gnome-terminal -- bash -c 'ssh root@10.144.1.2 -p 8022'",
-                "icon": "utilities-terminal"
-            }
-        ]
-    }
-]
-```
-
 ## Installation
 
-This extension is not available on [GNOME Extensions](https://extensions.gnome.org/) yet, but it can be manually installed:
+This extension is not yet available on [GNOME Extensions](https://extensions.gnome.org/), but it can be manually installed:
 
 1. Install the extension:
     ```bash
@@ -82,3 +32,81 @@ This extension is not available on [GNOME Extensions](https://extensions.gnome.o
     gnome-extensions enable command-menu2@goldentree1.github.com
     ```
     Or alternatively, use [Extension Manager](https://flathub.org/apps/com.mattjakeman.ExtensionManager) to enable it.
+
+## Usage & Examples
+The extension reads the configuration from [~/.commands.json](~/.commands.json) to generate the menu. Below are some example configurations you can take inspiration from to create your own [~/.commands.json](~/.commands.json):
+
+### Simple ~/.commands.json
+```
+[
+    {
+        "title": "Termimal",
+        "command": "gnome-terminal",
+        "icon": "utilities-terminal"
+    },
+    {
+        "title": "Files",
+        "command": "nautilus",
+        "icon": "folder"
+    },
+    {
+        "type": "separator"
+    },
+    {
+        "title": "SSH Connections",
+        "type": "submenu",
+        "submenu": [
+            {
+                "title": "Connect to Server (SSH)",
+                "command": "gnome-terminal -- bash -c 'ssh user@server1'",
+                "icon": "utilities-terminal"
+            }
+        ]
+    }
+]
+```
+
+### Customized ~/.commands.json
+A left-positioned menu with custom icon-paths.
+```
+{
+    "title": "Commands",
+    "icon": "utilities-terminal",
+    "position": "left",
+    "index": "auto",
+    "menu": [
+        {
+            "title": "Terminal",
+            "command": "gnome-terminal",
+            "icon": "utilities-terminal"
+        },
+        {
+            "title": "Files",
+            "command": "nautilus",
+            "icon": "folder"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "SSH Connections",
+            "icon": "/usr/share/icons/Adwaita/scalable/places/network-workgroup.svg",
+            "type": "submenu",
+            "submenu": [
+                {
+                    "title": "Connect to Server #1",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server1'"
+                },
+                {
+                    "title": "Connect to Server #2",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server2'",
+                    "icon": "~/.icons/my-custom-icon.jpg"
+                }
+            ]
+        }
+    ]
+}
+```
+
+## Contribution
+I would love to hear about any bugs, suggested changes or feature ideas you may have! Contributions are welcome! Please leave an issue or pull request on Github :-)

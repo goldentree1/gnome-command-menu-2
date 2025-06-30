@@ -1,6 +1,5 @@
 {
-    "title": "Commands",
-    "icon": "utilities-terminal-symbolic",
+    "icon": "utilities-terminal",
     "position": "left",
     "index": "auto",
     "menu": [

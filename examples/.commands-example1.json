@@ -1,0 +1,81 @@
+{
+    "title": "Menu",
+    "icon": "penguin",
+    "position": "left",
+    "index": 0,
+    "menu": [
+        {
+            "title": "Terminal",
+            "command": "gnome-terminal",
+            "icon": "utilities-terminal-symbolic"
+        },
+        {
+            "title": "Files",
+            "command": "nautilus",
+            "icon": "folder-symbolic"
+        },
+        {
+            "title": "Web Browser",
+            "command": "firefox",
+            "icon": "web-browser-symbolic"
+        },
+        {
+            "title": "Settings",
+            "command": "firefox",
+            "icon": "preferences-system-symbolic"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "SSH",
+            "icon": "network-workgroup",
+            "type": "submenu",
+            "submenu": [
+                {
+                    "title": "Connect to Server #1",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server1'"
+                },
+                {
+                    "title": "Connect to Server #2",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server2'"
+                }
+            ]
+        },
+        {
+            "title": "VPN",
+            "icon": "network-server",
+            "type": "submenu",
+            "submenu": [
+                {
+                    "title": "Connect to work VPN",
+                    "icon": "bank",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server1'"
+                },
+                {
+                    "title": "Connect to NordVPN",
+                    "icon": "nordvpn-symbolic",
+                    "command": "gnome-terminal -- bash -c 'ssh user@server2'"
+                }
+            ]
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Logout",
+            "icon": "system-log-out-symbolic",
+            "command": "gnome-session-quit"
+        },
+        {
+            "title": "Reboot",
+            "icon": "system-reboot-symbolic",
+            "command": "ls"
+        },
+        {
+            "title": "Power Off",
+            "icon": "system-shutdown-symbolic",
+            "command": "ls"
+        }
+    ]
+}
