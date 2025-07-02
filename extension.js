@@ -92,7 +92,7 @@ const CommandMenuPopup = GObject.registerClass(
         if (cmd.type === 'submenu' && level === 0) {
           if (!cmd.submenu) return;
           const submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title);
-          submenu.actor.set_style('padding-left: 14px; padding-right: 14px;');
+          // submenu.actor.set_style('padding-left: 14px; padding-right: 14px;');
           if (cmd.icon) {
             const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
             if (icon)
@@ -106,7 +106,7 @@ const CommandMenuPopup = GObject.registerClass(
         if (!cmd.command) return;
 
         let item = new PopupMenu.PopupBaseMenuItem();
-        item.actor.set_style('padding-left: 14px; padding-right: 14px;');
+        // item.actor.set_style('padding-left: 14px; padding-right: 14px;');
         let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
         if (icon)
           item.add_child(icon);
@@ -212,7 +212,7 @@ export default class CommandMenuExtension extends Extension {
               menus.push({ ...j, menu: [...j.menu, { type: 'separator' }] });
             } else if (j instanceof Array) {
               // simple array of commands
-              this.commands['menu'] = j;
+              // this.commands['menu'] = j;
               menus.push({ menu: [...j, { type: 'separator' }] });
             }
           }
@@ -222,7 +222,7 @@ export default class CommandMenuExtension extends Extension {
           menus.push({ ...json, menu: [...json.menu, { type: 'separator' }] });
         } else if (json instanceof Array) {
           // simple array of commands
-          this.commands['menu'] = json;
+          // this.commands['menu'] = json;
           menus.push({ menu: [...json, { type: 'separator' }] });
         }
       }
