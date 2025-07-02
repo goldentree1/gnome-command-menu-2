@@ -52,7 +52,7 @@ export default class CommandMenuExtension extends Extension {
           } else if (path.startsWith('$HOME/')) {
             path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(5)])
           } else if (!path.startsWith('/')) {
-            GLib.build_filenamev([GLib.get_home_dir(), path])
+            path = GLib.build_filenamev([GLib.get_home_dir(), path])
           }
           // try load icon
           const file = Gio.File.new_for_path(path);
