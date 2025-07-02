@@ -67,9 +67,32 @@ const CommandMenuPopup = GObject.registerClass(
 
         if (!cmd.title) return;
 
+        if (cmd.type === 'label') {
+          const sectionLabel = new PopupMenu.PopupBaseMenuItem({
+            reactive: false,
+            style_class: 'section-label-menu-item',
+          });
+
+          const label = new St.Label({
+            text: cmd.title,
+            style_class: 'popup-subtitle-menu-item',
+            x_expand: true,
+            x_align: Clutter.ActorAlign.START,
+            y_align: Clutter.ActorAlign.CENTER,
+          });
+
+          label.set_style('font-size: 0.8em; padding: 0em; margin: 0em; line-height: 1em;');
+          sectionLabel.actor.set_style('padding-top: 0px; padding-bottom: 0px; min-height: 0;');
+          sectionLabel.actor.add_child(label);
+
+          menu.addMenuItem(sectionLabel);
+          return;
+        }
+
         if (cmd.type === 'submenu' && level === 0) {
           if (!cmd.submenu) return;
           const submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title);
+          submenu.actor.set_style('padding-left: 14px; padding-right: 14px;');
           if (cmd.icon) {
             const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
             if (icon)
@@ -83,6 +106,7 @@ const CommandMenuPopup = GObject.registerClass(
         if (!cmd.command) return;
 
         let item = new PopupMenu.PopupBaseMenuItem();
+        item.actor.set_style('padding-left: 14px; padding-right: 14px;');
         let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
         if (icon)
           item.add_child(icon);
