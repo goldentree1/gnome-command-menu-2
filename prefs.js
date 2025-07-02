@@ -1,8 +1,10 @@
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import Adw from 'gi://Adw';
 import { ExtensionPreferences, gettext } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import commandsUI from './commandsUI.js'
 
 const MyPrefsWidget = new GObject.Class({
   Name: "CommandMenu.Prefs.Widget",
@@ -14,6 +16,8 @@ const MyPrefsWidget = new GObject.Class({
     this.set_spacing(15);
     this.set_orientation(Gtk.Orientation.VERTICAL);
     this.commandMenuExtensionPreferences = commandMenuExtensionPreferences;
+
+    // OG PREFERENCES SECTION --
 
     const linkBtn = new Gtk.LinkButton({
       label: "Examples (~/.commands.json)",
@@ -171,11 +175,73 @@ const MyPrefsWidget = new GObject.Class({
   }
 });
 
-
 export default class CommandMenuExtensionPreferences extends ExtensionPreferences {
+
   fillPreferencesWindow(window) {
+    window.set_default_size(1000, 800);
     window._settings = this.getSettings();
     const page = new Adw.PreferencesPage();
+
+
+
+    // COMMAND MENUS EDITOR SECTION --
+
+    var filePath = ".commands.json";
+    var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
+    const menus = [];
+    try {
+      var [ok, contents, _] = file.load_contents(null);
+      if (ok) {
+        const json = JSON.parse(contents);
+        if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
+          // multi-menu
+          for (let j of json) {
+            if (j instanceof Object && j.menu instanceof Array) {
+              // object menu
+              menus.push({ ...j, menu: [...j.menu, { type: 'separator' }] });
+            } else if (j instanceof Array) {
+              // simple array of commands
+              // this.commands['menu'] = j;
+              menus.push({ menu: [...j, { type: 'separator' }] });
+            }
+          }
+        } else if (json instanceof Object && json.menu instanceof Array) {
+          // object menu
+          // this.commands = json;
+          menus.push({ ...json, menu: [...json.menu, { type: 'separator' }] });
+        } else if (json instanceof Array) {
+          // simple array of commands
+          // this.commands['menu'] = json;
+          menus.push({ menu: [...json, { type: 'separator' }] });
+        }
+      }
+    } catch (e) {
+      menus.push({
+        menu: []
+      });
+    }
+
+    // const path = GLib.build_filenamev([GLib.get_home_dir(), 'prefs-debug.log']);
+    // GLib.file_set_contents(path, `${menus}\n`, -1);
+
+
+    let page2 = new commandsUI({
+      title: gettext('Commands'),
+      icon_name: 'utilities-terminal-symbolic',
+      menu: menus[0]
+      // Settings: window._settings,
+    });
+    window.add(page2);
+
+    // const page2 = new Adw.PreferencesPage({
+    //     title: _('Configuration'),
+    //     icon_name: 'applications-system-symbolic',
+    // });
+    // window.add(page2);
+
+    // const backupGroup1 = new Adw.PreferencesGroup({
+    //     title: _('Backup and Restore'),
+    // });
 
     const group = new Adw.PreferencesGroup({
       title: gettext('Command Menu 2'),

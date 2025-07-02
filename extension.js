@@ -154,21 +154,21 @@ const CommandMenuPopup = GObject.registerClass(
       let level = 0;
       this.populateMenuItems(this.menu, this.commands.menu, level);
 
-      if (this.commandMenuSettings.get_boolean('edit-button-visible')) {
-        let editBtn = new PopupMenu.PopupMenuItem('Edit Commands');
-        editBtn.connect('activate', () => {
-          this.editCommandsFile();
-        });
-        this.menu.addMenuItem(editBtn);
-      }
+      // if (this.commandMenuSettings.get_boolean('edit-button-visible')) {
+      //   let editBtn = new PopupMenu.PopupMenuItem('Edit Commands');
+      //   editBtn.connect('activate', () => {
+      //     this.editCommandsFile();
+      //   });
+      //   this.menu.addMenuItem(editBtn);
+      // }
 
-      if (this.commandMenuSettings.get_boolean('reload-button-visible')) {
-        let reloadBtn = new PopupMenu.PopupMenuItem('Reload');
-        reloadBtn.connect('activate', () => {
-          this.reloadExtension();
-        });
-        this.menu.addMenuItem(reloadBtn);
-      }
+      // if (this.commandMenuSettings.get_boolean('reload-button-visible')) {
+      //   let reloadBtn = new PopupMenu.PopupMenuItem('Reload');
+      //   reloadBtn.connect('activate', () => {
+      //     this.reloadExtension();
+      //   });
+      //   this.menu.addMenuItem(reloadBtn);
+      // }
     }
   });
 
@@ -185,15 +185,15 @@ export default class CommandMenuExtension extends Extension {
     this.enable();
   }
 
-  editCommandsFile() {
-    // Check if ~/.commands.json exsists (if not create it)
-    let file = Gio.file_new_for_path(GLib.get_home_dir() + '/.commands.json');
-    if (!file.query_exists(null)) {
-      file.replace_contents(JSON.stringify(commands), null, false, 0, null);
-    }
-    // Edit ~/.commands.json
-    Gio.AppInfo.launch_default_for_uri('file://' + GLib.get_home_dir() + '/.commands.json', null).launch(null, null);
-  }
+  // editCommandsFile() {
+  //   // Check if ~/.commands.json exsists (if not create it)
+  //   let file = Gio.file_new_for_path(GLib.get_home_dir() + '/.commands.json');
+  //   if (!file.query_exists(null)) {
+  //     file.replace_contents(JSON.stringify(commands), null, false, 0, null);
+  //   }
+  //   // Edit ~/.commands.json
+  //   Gio.AppInfo.launch_default_for_uri('file://' + GLib.get_home_dir() + '/.commands.json', null).launch(null, null);
+  // }
 
   addCommandMenus() {
     // load cmds
@@ -212,17 +212,14 @@ export default class CommandMenuExtension extends Extension {
               menus.push({ ...j, menu: [...j.menu, { type: 'separator' }] });
             } else if (j instanceof Array) {
               // simple array of commands
-              // this.commands['menu'] = j;
               menus.push({ menu: [...j, { type: 'separator' }] });
             }
           }
         } else if (json instanceof Object && json.menu instanceof Array) {
           // object menu
-          // this.commands = json;
           menus.push({ ...json, menu: [...json.menu, { type: 'separator' }] });
         } else if (json instanceof Array) {
           // simple array of commands
-          // this.commands['menu'] = json;
           menus.push({ menu: [...json, { type: 'separator' }] });
         }
       }
@@ -236,8 +233,8 @@ export default class CommandMenuExtension extends Extension {
       const popup = new CommandMenuPopup(
         menu,
         this._settings,
-        () => this.reloadExtension(),
-        () => this.editCommandsFile()
+        () => { },
+        () => { }
       );
 
       let index = menu.index;
@@ -255,17 +252,17 @@ export default class CommandMenuExtension extends Extension {
   enable() {
     this._settings = this.getSettings();
     this.addCommandMenus();
-    this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
-      this.reloadExtension();
-    }));
-    this._settingsIds.push(this._settings.connect('changed::edit-counter', () => {
-      this.editCommandsFile();
-    }));
+    // this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
+    //   this.reloadExtension();
+    // }));
+    // this._settingsIds.push(this._settings.connect('changed::edit-counter', () => {
+    //   this.editCommandsFile();
+    // }));
   }
 
   disable() {
-    this._settingsIds.forEach(id => this._settings.disconnect(id));
-    this._settingsIds = [];
+    // this._settingsIds.forEach(id => this._settings.disconnect(id));
+    // this._settingsIds = [];
     this.menus.forEach(m => m.destroy());
     this.menus = [];
     this._settings = null;
