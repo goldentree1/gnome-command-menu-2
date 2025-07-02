@@ -224,7 +224,7 @@ export default class CommandMenuExtension extends Extension {
         pos = "left";
 
       Main.panel.addToStatusArea(`commandMenu2_${i}`, popup, index, pos);
-      this.menus.push(menu);
+      this.menus.push(popup);
     });
   }
 
