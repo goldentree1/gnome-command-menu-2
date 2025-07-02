@@ -169,6 +169,7 @@ export default class CommandMenuExtension extends Extension {
   }
 
   addCommandMenu() {
+    // load cmds
     var filePath = ".commands.json";
     var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
     try {
@@ -191,30 +192,15 @@ export default class CommandMenuExtension extends Extension {
       type: 'separator'
     });
     this.commandMenuPopup = new CommandMenuPopup(this);
-    Main.panel.addToStatusArea('commandMenuPopup', this.commandMenuPopup, 1);
 
-    // re-position menu based on user prefs
-    let index;
-    if (this.commands.position === 'left' && Main.panel._leftBox) {
-      if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number') {
-        index = 1; // default to after activities btn
-      } else {
-        index = this.commands.index;
-      }
-      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
-      Main.panel._leftBox.insert_child_at_index(this.commandMenuPopup.container, index);
-    } else if ((this.commands.position === 'center' || this.commands.position === 'centre') && Main.panel._centerBox) {
-      if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number') {
-        index = 0;
-      } else {
-        index = this.commands.index;
-      }
-      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
-      Main.panel._centerBox.insert_child_at_index(this.commandMenuPopup.container, index);
-    } else if (this.commands.position === 'right' && (this.commands.index || this.commands.index === 0) && typeof this.commands.index === 'number' && Main.panel._rightBox) {
-      this.commandMenuPopup.container.get_parent()?.remove_child(this.commandMenuPopup.container);
-      Main.panel._rightBox.insert_child_at_index(this.commandMenuPopup.container, this.commands.index);
-    }
+    // add menu
+    let index = this.commands.index;
+    if ((!this.commands.index && this.commands.index !== 0) || typeof this.commands.index !== 'number')
+      index = 1;
+    let pos = this.commands.position;
+    if (!this.commands.position)
+      pos = "left";
+    Main.panel.addToStatusArea('command-menu', this.commandMenuPopup, index, pos);
   }
 
   enable() {
