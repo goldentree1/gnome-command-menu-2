@@ -5,6 +5,10 @@
     "index": 0,
     "menu": [
         {
+            "type": "label",
+            "title": "Applications"
+        },
+        {
             "title": "Terminal",
             "command": "gnome-terminal",
             "icon": "utilities-terminal-symbolic"
@@ -26,6 +30,10 @@
         },
         {
             "type": "separator"
+        },
+        {
+            "type": "label",
+            "title": "Networking"
         },
         {
             "title": "SSH",
