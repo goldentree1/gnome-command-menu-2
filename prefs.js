@@ -221,17 +221,17 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       });
     }
 
-    // const path = GLib.build_filenamev([GLib.get_home_dir(), 'prefs-debug.log']);
-    // GLib.file_set_contents(path, `${menus}\n`, -1);
-
-
+    
     let page2 = new commandsUI({
       title: gettext('Commands'),
       icon_name: 'utilities-terminal-symbolic',
-      menu: menus[0]
-      // Settings: window._settings,
+      menus: menus,
+      menuIdx: 0,
+      settings: window._settings,
     });
     window.add(page2);
+    // for(let i = 0; i < menus.length; i++){
+    // }
 
     // const page2 = new Adw.PreferencesPage({
     //     title: _('Configuration'),
