@@ -198,21 +198,21 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
           for (let j of json) {
             if (j instanceof Object && j.menu instanceof Array) {
               // object menu
-              menus.push({ ...j, menu: [...j.menu, { type: 'separator' }] });
+              menus.push({ ...j, menu: j.menu });
             } else if (j instanceof Array) {
               // simple array of commands
               // this.commands['menu'] = j;
-              menus.push({ menu: [...j, { type: 'separator' }] });
+              menus.push({ menu: j });
             }
           }
         } else if (json instanceof Object && json.menu instanceof Array) {
           // object menu
           // this.commands = json;
-          menus.push({ ...json, menu: [...json.menu, { type: 'separator' }] });
+          menus.push({ ...json, menu: json.menu });
         } else if (json instanceof Array) {
           // simple array of commands
           // this.commands['menu'] = json;
-          menus.push({ menu: [...json, { type: 'separator' }] });
+          menus.push({ menu: json });
         }
       }
     } catch (e) {

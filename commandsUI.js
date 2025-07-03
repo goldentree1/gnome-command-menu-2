@@ -164,15 +164,12 @@ export default class commandsUI extends Adw.PreferencesPage {
         this.add(metadataGroup);
         this.add(commandEditorGroup);
 
-        this.populateCommandsListBox();
+        this.populateCommandsListBox(this.commandsListBox, 0, this.menus[this.menuIdx].menu);
     }
 
-    populateCommandsListBox() {
-        if (!Array.isArray(this.menus[this.menuIdx].menu)) return;
-
-        for (let i = 0; i < this.menus[this.menuIdx].menu.length; i++) {
-            const item = this.menus[this.menuIdx].menu[i];
-
+    populateCommandsListBox(listBox, depth, items) {
+        if (!Array.isArray(items)) return;
+        for (const item of items) {
             let row;
             if (item.type === 'separator') {
                 row = new Adw.ExpanderRow({
@@ -189,14 +186,43 @@ export default class commandsUI extends Adw.PreferencesPage {
                     expanded: false,
                 });
 
-                const entryRowTitle = new Adw.EntryRow({ title: _('Label Title:'), text: item.title || '' });
+                const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
 
                 entryRowTitle.connect('notify::text', () => {
                     item.title = entryRowTitle.text;
                     row.set_title(`<b>Label:</b> ${item.title || ''}`);
                 });
 
-                row.add_row(entryRowTitle)
+                row.add_row(entryRowTitle);
+            } else if (item.type === "submenu") {
+                row = new Adw.ExpanderRow({
+                    title: `<b>Submenu:</b> ${item.title || ''}`,
+                    selectable: false,
+                    expanded: false,
+                });
+                const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
+
+                entryRowTitle.connect('notify::text', () => {
+                    item.title = entryRowTitle.text;
+                    row.set_title(`<b>Submenu:</b> ${item.title || ''}`);
+                });
+
+                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
+                entryRowIcon.connect('notify::text', () => {
+                    item.icon = entryRowIcon.text;
+                });
+
+                row.add_row(entryRowTitle);
+                row.add_row(entryRowIcon);
+
+                const submenuListBox = new Gtk.ListBox();
+                submenuListBox.add_css_class('boxed-list');
+
+                this.populateCommandsListBox(submenuListBox, 1, item.submenu);
+
+                const container = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, spacing: 6 });
+                container.append(submenuListBox);
+                row.add_row(container);
             } else if (item.command) {
                 row = new Adw.ExpanderRow({
                     title: item.title || _('Untitled'),
@@ -208,7 +234,6 @@ export default class commandsUI extends Adw.PreferencesPage {
                 const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '' });
                 const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
 
-                // Bind changes to JSON data
                 entryRowName.connect('notify::text', () => {
                     item.title = entryRowName.text;
                     row.set_title(item.title || _('Untitled'));
@@ -225,8 +250,6 @@ export default class commandsUI extends Adw.PreferencesPage {
                 row.add_row(entryRowName);
                 row.add_row(entryRowCommand);
                 row.add_row(entryRowIcon);
-            } else {
-                continue; // TODO TEMPORARY! THIS SHOULD NOT BE HERE - THROW ERROR IF UNRECOGNISED
             }
 
             row.add_prefix(new Gtk.Image({
@@ -263,8 +286,23 @@ export default class commandsUI extends Adw.PreferencesPage {
                 icon.child = dragWidget;
                 drag.set_hotspot(0, 0);
             });
+            // Show icon if available
+            if (item.icon) {
+                let iconWidget;
 
-            this.commandsListBox.append(row);
+                if (item.icon.includes('/') || item.icon.includes('.')) {
+                    // Assume it's a file path
+                    iconWidget = Gtk.Image.new_from_file(item.icon);
+                } else {
+                    // Assume it's an icon name
+                    iconWidget = Gtk.Image.new_from_icon_name(item.icon);
+                }
+
+                iconWidget.add_css_class('dim-label');
+                row.add_prefix(iconWidget);
+            }
+            // this.commandsListBox.append(row);
+            listBox.append(row);
         }
     }
 
