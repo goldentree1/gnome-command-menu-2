@@ -18,44 +18,20 @@ const CommandMenuPopup = GObject.registerClass(
       this.redrawMenu();
     }
 
-    loadIcon(iconStr, style_class) {
-      let icon = null;
-      if (iconStr && typeof iconStr === 'string' && iconStr.length > 0) {
-        if (iconStr.includes('/') || iconStr.includes('.')) {
-          // custom icon file
-          let path = iconStr;
-          try {
-            // fix path for home aliases
-            if (path.startsWith('~/')) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(1)])
-            } else if (path.startsWith('$HOME/')) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(5)])
-            } else if (!path.startsWith('/')) {
-              path = GLib.build_filenamev([GLib.get_home_dir(), path])
-            }
-            // try load icon
-            const file = Gio.File.new_for_path(path);
-            if (!file.query_exists(null)) {
-              throw new Error('file doesnt exist');
-            }
-            const gicon = new Gio.FileIcon({ file });
-            icon = new St.Icon({
-              gicon,
-              style_class,
-            });
-          } catch (err) {
-            // fallback to default if custom fails
-            logError(`failed to load icon from "${path}":`, err);
-          }
-        } else {
-          // system icon
-          icon = new St.Icon({
-            icon_name: iconStr,
-            style_class,
-          });
-        }
-      }
-      return icon;
+    loadIcon(icon, style_class) {
+      if (typeof icon !== 'string' || !icon.length) return null;
+
+      if (!(icon.includes('/') || icon.includes('.'))) // sys icon
+        return new St.Icon({ icon_name: icon, style_class });
+
+      if (icon.startsWith('~/') || icon.startsWith("$HOME/"))
+        icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+      if (!icon.startsWith('/'))
+        icon = GLib.build_filenamev([GLib.get_home_dir(), icon]);
+      const file = Gio.File.new_for_path(icon);
+      if (!file.query_exists(null)) return new St.Icon({ style_class });
+      const gicon = new Gio.FileIcon({ file });
+      return new St.Icon({ gicon, style_class });
     }
 
     populateMenuItems(menu, cmds, level) {
@@ -92,11 +68,9 @@ const CommandMenuPopup = GObject.registerClass(
         if (cmd.type === 'submenu' && level === 0) {
           if (!cmd.submenu) return;
           const submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title);
-          // submenu.actor.set_style('padding-left: 14px; padding-right: 14px;');
           if (cmd.icon) {
             const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
-            if (icon)
-              submenu.insert_child_at_index(icon, 1);
+            if (icon) submenu.insert_child_at_index(icon, 1);
           }
           this.populateMenuItems(submenu.menu, cmd.submenu, level + 1);
           menu.addMenuItem(submenu);
@@ -106,7 +80,6 @@ const CommandMenuPopup = GObject.registerClass(
         if (!cmd.command) return;
 
         let item = new PopupMenu.PopupBaseMenuItem();
-        // item.actor.set_style('padding-left: 14px; padding-right: 14px;');
         let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
         if (icon)
           item.add_child(icon);
@@ -128,19 +101,14 @@ const CommandMenuPopup = GObject.registerClass(
       let box = new St.BoxLayout();
 
       // add icon
-      let icon = null;
-      if (this.commands.icon) {
-        icon = this.loadIcon(this.commands.icon, 'system-status-icon');
-      }
-      if (!icon && menuTitle === "") {
-        // no icon or title: use fallback so its not empty
+      let icon = this.loadIcon(this.commands.icon, 'system-status-icon');
+      if (!icon && menuTitle === "") { // fallback icon
         icon = new St.Icon({
           icon_name: 'utilities-terminal-symbolic',
           style_class: 'system-status-icon',
         });
       }
       if (icon) box.add_child(icon);
-
       // add title
       let toplabel = new St.Label({
         text: menuTitle,
@@ -150,7 +118,7 @@ const CommandMenuPopup = GObject.registerClass(
       box.add_child(toplabel);
       this.add_child(box);
 
-      // populate menu
+      // add menu
       let level = 0;
       this.populateMenuItems(this.menu, this.commands.menu, level);
 
@@ -175,7 +143,7 @@ const CommandMenuPopup = GObject.registerClass(
 export default class CommandMenuExtension extends Extension {
   constructor(metadata) {
     super(metadata);
-    this.menus = [];
+    this.cmdMenus = [];
     this._settings = null;
     this._settingsIds = [];
   }
@@ -197,41 +165,22 @@ export default class CommandMenuExtension extends Extension {
 
   addCommandMenus() {
     // load cmds
-    var filePath = ".commands.json";
-    var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
+    const filePath = ".commands.json";
+    const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
     const menus = [];
     try {
-      var [ok, contents, _] = file.load_contents(null);
-      if (ok) {
-        const json = JSON.parse(contents);
-        if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
-          // multi-menu
-          for (let j of json) {
-            if (j instanceof Object && j.menu instanceof Array) {
-              // object menu
-              menus.push({ ...j, menu: [...j.menu, { type: 'separator' }] });
-            } else if (j instanceof Array) {
-              // simple array of commands
-              // this.commands['menu'] = j;
-              menus.push({ menu: [...j, { type: 'separator' }] });
-            }
-          }
-        } else if (json instanceof Object && json.menu instanceof Array) {
-          // object menu
-          // this.commands = json;
-          menus.push({ ...json, menu: [...json.menu, { type: 'separator' }] });
-        } else if (json instanceof Array) {
-          // simple array of commands
-          // this.commands['menu'] = json;
-          menus.push({ menu: [...json, { type: 'separator' }] });
-        }
+      let [ok, contents, _] = file.load_contents(null);
+      if (!ok) throw Error();
+      const json = JSON.parse(contents);
+      if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
+        json.forEach(j => menus.push(parseMenu(j)));
+      } else {
+        menus.push(parseMenu(json));
       }
     } catch (e) {
-      menus.push({
-        menu: []
-      });
+      menus.push({ menu: [] });
     }
-
+    // add menus to panel
     menus.forEach((menu, i) => {
       const popup = new CommandMenuPopup(
         menu,
@@ -240,16 +189,21 @@ export default class CommandMenuExtension extends Extension {
         () => this.editCommandsFile()
       );
 
-      let index = menu.index;
-      if ((!menu.index && menu.index !== 0) || typeof menu.index !== 'number')
-        index = 1;
-      let pos = menu.position;
-      if (!menu.position)
-        pos = "left";
-
+      let index = Number.isInteger(+menu.index) ? +menu.index : 1;
+      let pos = (menu.position !== 'right' && menu.position !== 'center') ? menu.position : 'left';
       Main.panel.addToStatusArea(`commandMenu2_${i}`, popup, index, pos);
-      this.menus.push(popup);
+      this.cmdMenus.push(popup);
     });
+
+    function parseMenu(obj) {
+      if (obj instanceof Object && obj.menu instanceof Array) { // object menu
+        return { ...obj, menu: [...obj.menu, { type: 'separator' }] };
+      } else if (obj instanceof Array) { // simple array menu
+        return { menu: [...obj, { type: 'separator' }] };
+      } else {
+        return { menu: [] };
+      }
+    }
   }
 
   enable() {
@@ -264,10 +218,10 @@ export default class CommandMenuExtension extends Extension {
   }
 
   disable() {
-    this._settingsIds.forEach(id => this._settings.disconnect(id));
+    this._settingsIds.forEach(s => this._settings.disconnect(s));
     this._settingsIds = [];
-    this.menus.forEach(m => m.destroy());
-    this.menus = [];
+    this.cmdMenus.forEach(m => m.destroy());
+    this.cmdMenus = [];
     this._settings = null;
   }
 }
