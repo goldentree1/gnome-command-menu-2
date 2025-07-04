@@ -8,6 +8,7 @@
 
 import { gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import Adw from 'gi://Adw';
+import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import GLib from 'gi://GLib';
@@ -27,7 +28,7 @@ export default class commandsUI extends Adw.PreferencesPage {
         super._init(args);
         this.menuIdx = menuIdx;
         this.menus = menus;
-        // const menu = this.menus[this.menuIdx];
+        const menu = this.menus[this.menuIdx];
 
         const style = new Gtk.CssProvider();
         const cssData = `button > label { font-weight: normal; }`;
@@ -115,20 +116,6 @@ export default class commandsUI extends Adw.PreferencesPage {
             settings.set_int('restart-counter', settings.get_int('restart-counter') + 1);
         });
 
-        const newButton = new Gtk.Button();
-        newButton.set_child(Gtk.Image.new_from_icon_name('document-new-symbolic'));
-        newButton.set_tooltip_text(_('New (raw save)'));
-        newButton.connect('clicked', () => {
-            try {
-                const json = JSON.stringify(this.menu, null, 2);
-                const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-                GLib.file_set_contents(filePath, json, -1);
-                print('Commands saved to ~/.commands.json');
-            } catch (e) {
-                logError(e, 'Failed to save commands');
-            }
-        });
-
         const saveButton = new Gtk.Button();
         saveButton.set_child(Gtk.Image.new_from_icon_name('document-save-symbolic'));
         saveButton.set_tooltip_text(_('Save and Reload'));
@@ -188,7 +175,7 @@ export default class commandsUI extends Adw.PreferencesPage {
             spacing: 12,
         });
 
-        [newButton, saveButton, refreshButton].forEach(button => {
+        [saveButton, refreshButton].forEach(button => {
             button.set_hexpand(true);
             button.set_halign(Gtk.Align.FILL);
             buttonBox.append(button);
@@ -198,7 +185,7 @@ export default class commandsUI extends Adw.PreferencesPage {
         commandEditorGroup.add(box);
 
         this.add(mainGroup);
-        // this.add(metadataGroup);
+        this.add(metadataGroup);
         this.add(commandEditorGroup);
 
         this.populateCommandsListBox(this.commandsListBox, 0, this.menus[this.menuIdx].menu);
@@ -207,46 +194,36 @@ export default class commandsUI extends Adw.PreferencesPage {
     populateCommandsListBox(listBox, depth, items) {
         if (!Array.isArray(items)) return;
         for (const item of items) {
-            let row;
+            const row = new Adw.ExpanderRow({
+                title: `<b>${_(item.type || '')}</b> ${_(item.title || '')}`,
+                use_markup: true,
+                selectable: false,
+                expanded: false,
+                margin_start: depth * 24,
+            });
+
+            row._item = item;
+            row._depth = depth;
+
             if (item.type === 'separator') {
-                row = new Adw.ExpanderRow({
-                    title: `<b>${_('Separator')}</b>`,
-                    use_markup: true,
-                    selectable: false,
-                    expanded: false,
-                    margin_start: depth * 24,
-                });
+                row.set_title(`<b>${_('Separator')}</b>`);
             } else if (item.type === 'label') {
-                row = new Adw.ExpanderRow({
-                    title: `<b>Label:</b> ${item.title || ''}`,
-                    use_markup: true,
-                    selectable: false,
-                    expanded: false,
-                    margin_start: depth * 24,
-                });
+                row.set_title(`<b>Label:</b> ${item.title || ''}`);
 
                 const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
-
                 entryRowTitle.connect('notify::text', () => {
                     item.title = entryRowTitle.text;
                     row.set_title(`<b>Label:</b> ${item.title || ''}`);
                 });
-
                 row.add_row(entryRowTitle);
             } else if (item.type === "submenu") {
-                row = new Adw.ExpanderRow({
-                    title: `<b>Submenu:</b> ${item.title || ''}`,
-                    selectable: false,
-                    expanded: false,
-                    margin_start: depth * 24,
-                });
-                const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
+                row.set_title(`<b>Submenu:</b> ${item.title || ''}`);
 
+                const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
                 entryRowTitle.connect('notify::text', () => {
                     item.title = entryRowTitle.text;
                     row.set_title(`<b>Submenu:</b> ${item.title || ''}`);
                 });
-
                 const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
                 entryRowIcon.connect('notify::text', () => {
                     item.icon = entryRowIcon.text;
@@ -255,37 +232,73 @@ export default class commandsUI extends Adw.PreferencesPage {
                 row.add_row(entryRowTitle);
                 row.add_row(entryRowIcon);
             } else if (item.command) {
-                row = new Adw.ExpanderRow({
-                    title: item.title || _('Untitled'),
-                    selectable: false,
-                    expanded: false,
-                    margin_start: depth * 24,
-                });
+                row.set_title(item.title || _('Untitled'));
 
-                const entryRowName = new Adw.EntryRow({ title: _('Name:'), text: item.title || '' });
-                const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '' });
-                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
-
-                entryRowName.connect('notify::text', () => {
-                    item.title = entryRowName.text;
+                const entryRowTitle = new Adw.EntryRow({ title: _('Name:'), text: item.title || '' });
+                entryRowTitle.connect('notify::text', () => {
+                    item.title = entryRowTitle.text;
                     row.set_title(item.title || _('Untitled'));
                 });
-
+                const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '' });
                 entryRowCommand.connect('notify::text', () => {
                     item.command = entryRowCommand.text;
                 });
-
+                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
                 entryRowIcon.connect('notify::text', () => {
                     item.icon = entryRowIcon.text;
                 });
 
-                row.add_row(entryRowName);
+                row.add_row(entryRowTitle);
                 row.add_row(entryRowCommand);
                 row.add_row(entryRowIcon);
             }
 
-            row._item = item;
-            row._depth = depth;
+            // menu button (add/delete)
+            const gMenu = new Gio.Menu();
+            gMenu.append(_('Insert new'), 'row.insert');
+            gMenu.append(_('Duplicate'), 'row.duplicate');
+            gMenu.append(_('Delete'), 'row.delete');
+
+            const menuButton = new Gtk.MenuButton({
+                icon_name: 'view-more-symbolic',
+                valign: Gtk.Align.CENTER,
+                has_frame: false,
+                menu_model: gMenu,
+            });
+
+            const actionGroup = new Gio.SimpleActionGroup();
+
+            const deleteAction = new Gio.SimpleAction({ name: 'delete' });
+            deleteAction.connect('activate', () => {
+                const rows = [...this.commandsListBox];
+                const index = rows.indexOf(row);
+                if (index === -1) return;
+
+                const baseDepth = row._depth;
+                const toRemove = [row];
+
+                for (let i = index + 1; i < rows.length; i++) {
+                    if (rows[i]._depth > baseDepth) {
+                        toRemove.push(rows[i]);
+                    } else break;
+                }
+
+                for (const r of toRemove) this.commandsListBox.remove(r);
+            });
+            actionGroup.add_action(deleteAction);
+
+            const duplicateAction = new Gio.SimpleAction({ name: 'duplicate' });
+            duplicateAction.connect('activate', () => {
+
+            });
+            actionGroup.add_action(duplicateAction);
+
+            row.insert_action_group('row', actionGroup);
+            row.add_suffix(menuButton);
+            row.insert_action_group('row', actionGroup);
+
+
+            // drag/drop setup
 
             row.add_prefix(new Gtk.Image({
                 icon_name: 'list-drag-handle-symbolic',
@@ -346,55 +359,42 @@ export default class commandsUI extends Adw.PreferencesPage {
         if (!value || !targetRow || !draggedRow) return false;
         if (targetRow === draggedRow) return false;
 
-        const allRows = [...this.commandsListBox];
-        const fromIndex = allRows.indexOf(draggedRow);
-        const toIndex = allRows.indexOf(targetRow);
-        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return false;
+        const rows = [...this.commandsListBox];
+        const fromIndex = rows.indexOf(draggedRow);
+        const targetIndex = rows.indexOf(targetRow);
+        if (fromIndex === -1 || targetIndex === -1 || fromIndex === targetIndex) return false;
 
-        const getSubtreeBlock = (startIndex, all) => {
-            const block = [all[startIndex]];
-            const baseDepth = all[startIndex]._depth;
-            for (let i = startIndex + 1; i < all.length; i++) {
-                if (all[i]._depth > baseDepth) {
-                    block.push(all[i]);
-                } else {
-                    break;
-                }
+        const moveThese = [rows[fromIndex]];
+
+        // add nested items (adjacent rows with higher depth values)
+        for (let i = fromIndex + 1; i < rows.length; i++) {
+            if (rows[i]._depth > rows[fromIndex]._depth) {
+                moveThese.push(rows[i]);
+            } else {
+                break;
             }
-            return block;
-        };
-
-        const setRowDepth = (row, depth) => {
-            row._depth = depth;
-            row.set_margin_start(depth * 24);
-        };
-
-        const draggedBlock = getSubtreeBlock(fromIndex, allRows);
-        const draggedDepth = draggedRow._depth;
-        const blockLength = draggedBlock.length;
-
-        // Prevent moving into own children
-        if (toIndex > fromIndex && toIndex < fromIndex + blockLength) return false;
-
-        // Determine new depth
-        let newDepth = targetRow._depth;
-        // if (targetRow._item?.type === 'submenu') newDepth += 1; // I REMOVED THIS - UNDESIRED BEHAVIOUR
-
-        // Remove block
-        for (const row of draggedBlock) this.commandsListBox.remove(row);
-
-        let insertIndex = toIndex > fromIndex ? toIndex - blockLength : toIndex;
-
-        // Adjust depth + reinsert
-        for (const row of draggedBlock) {
-            const relative = row._depth - draggedDepth;
-            setRowDepth(row, newDepth + relative);
-            this.commandsListBox.insert(row, insertIndex++);
         }
 
-        // Scroll restoration
+        if (targetIndex > fromIndex && targetIndex < fromIndex + moveThese.length)
+            return false; // dont allow submenu to drag into itself
+
         const adjustment = this._scroller.get_vadjustment();
         const scrollValue = adjustment.get_value();
+
+        // remove items
+        for (const row of moveThese) this.commandsListBox.remove(row);
+
+        let insertIndex = targetIndex > fromIndex ? targetIndex - moveThese.length : targetIndex;
+        const baseDepth = draggedRow._depth;
+        const newBaseDepth = targetRow._item?.type === "submenu"
+            ? targetRow._depth + 1
+            : targetRow._depth;
+        for (const row of moveThese) {
+            const relative = row._depth - baseDepth;
+            row._depth = newBaseDepth + relative;
+            row.set_margin_start(row._depth * 24);
+            this.commandsListBox.insert(row, insertIndex++);
+        }
 
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             adjustment.set_value(scrollValue);
