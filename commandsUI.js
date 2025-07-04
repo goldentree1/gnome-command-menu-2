@@ -177,6 +177,7 @@ export default class commandsUI extends Adw.PreferencesPage {
                     use_markup: true,
                     selectable: false,
                     expanded: false,
+                    margin_start: depth * 24,
                 });
             } else if (item.type === 'label') {
                 row = new Adw.ExpanderRow({
@@ -184,6 +185,7 @@ export default class commandsUI extends Adw.PreferencesPage {
                     use_markup: true,
                     selectable: false,
                     expanded: false,
+                    margin_start: depth * 24,
                 });
 
                 const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
@@ -199,6 +201,7 @@ export default class commandsUI extends Adw.PreferencesPage {
                     title: `<b>Submenu:</b> ${item.title || ''}`,
                     selectable: false,
                     expanded: false,
+                    margin_start: depth * 24,
                 });
                 const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
 
@@ -214,20 +217,12 @@ export default class commandsUI extends Adw.PreferencesPage {
 
                 row.add_row(entryRowTitle);
                 row.add_row(entryRowIcon);
-
-                const submenuListBox = new Gtk.ListBox();
-                submenuListBox.add_css_class('boxed-list');
-
-                this.populateCommandsListBox(submenuListBox, 1, item.submenu);
-
-                const container = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, spacing: 6 });
-                container.append(submenuListBox);
-                row.add_row(container);
             } else if (item.command) {
                 row = new Adw.ExpanderRow({
                     title: item.title || _('Untitled'),
                     selectable: false,
                     expanded: false,
+                    margin_start: depth * 24,
                 });
 
                 const entryRowName = new Adw.EntryRow({ title: _('Name:'), text: item.title || '' });
@@ -251,6 +246,9 @@ export default class commandsUI extends Adw.PreferencesPage {
                 row.add_row(entryRowCommand);
                 row.add_row(entryRowIcon);
             }
+
+            row._item = item;
+            row._depth = depth;
 
             row.add_prefix(new Gtk.Image({
                 icon_name: 'list-drag-handle-symbolic',
@@ -286,23 +284,23 @@ export default class commandsUI extends Adw.PreferencesPage {
                 icon.child = dragWidget;
                 drag.set_hotspot(0, 0);
             });
-            // Show icon if available
+
             if (item.icon) {
                 let iconWidget;
-
                 if (item.icon.includes('/') || item.icon.includes('.')) {
-                    // Assume it's a file path
                     iconWidget = Gtk.Image.new_from_file(item.icon);
                 } else {
-                    // Assume it's an icon name
                     iconWidget = Gtk.Image.new_from_icon_name(item.icon);
                 }
-
                 iconWidget.add_css_class('dim-label');
                 row.add_prefix(iconWidget);
             }
-            // this.commandsListBox.append(row);
+
             listBox.append(row);
+
+            if (item.type === "submenu") {
+                this.populateCommandsListBox(listBox, depth + 1, item.submenu);
+            }
         }
     }
 
@@ -311,22 +309,55 @@ export default class commandsUI extends Adw.PreferencesPage {
         if (!value || !targetRow || !draggedRow) return false;
         if (targetRow === draggedRow) return false;
 
-        const fromIndex = [...this.commandsListBox].indexOf(draggedRow);
-        const toIndex = [...this.commandsListBox].indexOf(targetRow);
+        const allRows = [...this.commandsListBox];
+        const fromIndex = allRows.indexOf(draggedRow);
+        const toIndex = allRows.indexOf(targetRow);
         if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return false;
 
+        const getSubtreeBlock = (startIndex, all) => {
+            const block = [all[startIndex]];
+            const baseDepth = all[startIndex]._depth;
+            for (let i = startIndex + 1; i < all.length; i++) {
+                if (all[i]._depth > baseDepth) {
+                    block.push(all[i]);
+                } else {
+                    break;
+                }
+            }
+            return block;
+        };
+
+        const setRowDepth = (row, depth) => {
+            row._depth = depth;
+            row.set_margin_start(depth * 24);
+        };
+
+        const draggedBlock = getSubtreeBlock(fromIndex, allRows);
+        const draggedDepth = draggedRow._depth;
+        const blockLength = draggedBlock.length;
+
+        // Prevent moving into own children
+        if (toIndex > fromIndex && toIndex < fromIndex + blockLength) return false;
+
+        // Determine new depth
+        let newDepth = targetRow._depth;
+        // if (targetRow._item?.type === 'submenu') newDepth += 1; // I REMOVED THIS - UNDESIRED BEHAVIOUR
+
+        // Remove block
+        for (const row of draggedBlock) this.commandsListBox.remove(row);
+
+        let insertIndex = toIndex > fromIndex ? toIndex - blockLength : toIndex;
+
+        // Adjust depth + reinsert
+        for (const row of draggedBlock) {
+            const relative = row._depth - draggedDepth;
+            setRowDepth(row, newDepth + relative);
+            this.commandsListBox.insert(row, insertIndex++);
+        }
+
+        // Scroll restoration
         const adjustment = this._scroller.get_vadjustment();
         const scrollValue = adjustment.get_value();
-
-        // edit listbox
-        this.commandsListBox.remove(draggedRow);
-        const adjustedIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
-        this.commandsListBox.insert(draggedRow, adjustedIndex);
-
-        // edit menu items
-        const item = this.menus[this.menuIdx].menu[fromIndex];
-        this.menus[this.menuIdx].menu.splice(fromIndex, 1);
-        this.menus[this.menuIdx].menu.splice(adjustedIndex, 0, item);
 
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             adjustment.set_value(scrollValue);
@@ -344,4 +375,5 @@ export default class commandsUI extends Adw.PreferencesPage {
         draggedRow = null;
         return true;
     }
+
 }
