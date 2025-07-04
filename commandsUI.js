@@ -27,7 +27,7 @@ export default class commandsUI extends Adw.PreferencesPage {
         super._init(args);
         this.menuIdx = menuIdx;
         this.menus = menus;
-        const menu = this.menus[this.menuIdx];
+        // const menu = this.menus[this.menuIdx];
 
         const style = new Gtk.CssProvider();
         const cssData = `button > label { font-weight: normal; }`;
@@ -133,6 +133,43 @@ export default class commandsUI extends Adw.PreferencesPage {
         saveButton.set_child(Gtk.Image.new_from_icon_name('document-save-symbolic'));
         saveButton.set_tooltip_text(_('Save and Reload'));
         saveButton.connect('clicked', () => {
+            log("[CMDMENU_PREFS]", "clicked save!");
+
+            const newMenu = [];
+            const stack = [{ depth: -1, items: newMenu }];
+
+            let row = this.commandsListBox.get_first_child();
+            while (row) {
+                const item = row._item;
+                const depth = row._depth || 0;
+                log('[CMDMENU_PREFS]', item);
+
+                const newItem = {
+                    type: item.type,
+                    title: item.title || '',
+                    icon: item.icon || undefined,
+                    command: item.command || '',
+                };
+
+                // Handle nested submenu logic
+                while (stack.length > 1 && depth <= stack[stack.length - 1].depth) {
+                    stack.pop();
+                }
+
+                // Add to current parent's items array
+                stack[stack.length - 1].items.push(newItem);
+
+                // If this is a submenu, push to stack for following items
+                if (item.type === 'submenu') {
+                    newItem.submenu = [];
+                    stack.push({ depth, items: newItem.submenu });
+                }
+
+                row = row.get_next_sibling();
+            }
+
+            this.menus[this.menuIdx].menu = newMenu;
+
             try {
                 const json = JSON.stringify(this.menus, null, 2);
                 const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
@@ -161,7 +198,7 @@ export default class commandsUI extends Adw.PreferencesPage {
         commandEditorGroup.add(box);
 
         this.add(mainGroup);
-        this.add(metadataGroup);
+        // this.add(metadataGroup);
         this.add(commandEditorGroup);
 
         this.populateCommandsListBox(this.commandsListBox, 0, this.menus[this.menuIdx].menu);
