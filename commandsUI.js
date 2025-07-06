@@ -386,12 +386,9 @@ export default class commandsUI extends Adw.PreferencesPage {
 
         let insertIndex = targetIndex > fromIndex ? targetIndex - moveThese.length : targetIndex;
         const baseDepth = draggedRow._depth;
-        const newBaseDepth = targetRow._item?.type === "submenu"
-            ? targetRow._depth + 1
-            : targetRow._depth;
         for (const row of moveThese) {
             const relative = row._depth - baseDepth;
-            row._depth = newBaseDepth + relative;
+            row._depth = targetRow._depth + relative;
             row.set_margin_start(row._depth * 24);
             this.commandsListBox.insert(row, insertIndex++);
         }
