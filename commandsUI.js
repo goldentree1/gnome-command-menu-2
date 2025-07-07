@@ -239,7 +239,7 @@ export default class commandsUI extends Adw.PreferencesPage {
         });
         const addBox = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 1,
+            spacing: 2,
             halign: Gtk.Align.END,
         });
         addBox.append(addButton);

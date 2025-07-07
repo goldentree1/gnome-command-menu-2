@@ -197,15 +197,15 @@ class GeneralPreferencesPage extends Adw.PreferencesPage {
     const descriptionBox = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
       spacing: 6,
-      margin_top: 12,
-      margin_bottom: 12,
+      margin_top: 20,
+      margin_bottom: 15,
       margin_start: 12,
       margin_end: 12,
     });
     const description = new Gtk.Label({
       label: gettext('Welcome to Command Menu 2! Use this app to create, remove and customize your menus - or try one of our fully-functional templates.'),
       wrap: true,
-      xalign: 0.5
+      xalign: 0
     });
     description.get_style_context().add_class('dim-label');
     descriptionBox.append(description);
@@ -266,6 +266,7 @@ class GeneralPreferencesPage extends Adw.PreferencesPage {
     const group3 = new Adw.PreferencesGroup({
       title: gettext('Templates (click to add to menus):'),
     });
+    group3.set_margin_top(12);
 
     // Add header label
     // const templateLabel = new Gtk.Label({
