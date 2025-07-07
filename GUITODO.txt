@@ -1,0 +1,28 @@
+
+Menu Editor:
+ - make menu items scroll longer -- DONE
+ - 3-dot menu: delete -- DONE
+ - 3-dot menu duplicate
+ - 3-dot menu: insert
+ - Add Item
+ - Add Item Separator
+ - Add Item Label
+ - Add item Submenu
+ - left/right/center combobox
+ - index (auto tick or number incr/decr item)
+ - Add Browse dialog to icon (just make a dialog that tells user they can use sys icons and give a link, or button to actually browse file)
+    should be done on menu title and all menu items
+ - refresh icon when changed
+ - Do insert/duplicate/delete functionality on menu item (DELETE DONE!)
+
+General:
+ - List of menus -- DONE
+ - Remove menu button -- DONE
+ - Add menu button -- DONE
+ - Templates -- DONE
+ - Edit config manually button
+ 
+
+Extras?:
+ - Config file location
+ - Command could have button to 'choose application' or 'open file' or 'open webpage' or etc. 
