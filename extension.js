@@ -20,10 +20,10 @@ const CommandMenuPopup = GObject.registerClass(
 
     loadIcon(icon, style_class) {
       if (typeof icon !== 'string' || !icon.length) return null;
-
-      if (!(icon.includes('/') || icon.includes('.'))) // sys icon
+      // sys icon
+      if (!(icon.includes('/') || icon.includes('.')))
         return new St.Icon({ icon_name: icon, style_class });
-
+      // filepath icon
       if (icon.startsWith('~/') || icon.startsWith("$HOME/"))
         icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
       if (!icon.startsWith('/'))
@@ -97,10 +97,10 @@ const CommandMenuPopup = GObject.registerClass(
     }
 
     redrawMenu() {
+      // add popup menu title
       let menuTitle = this.commands.title && this.commands.title.length > 0 ? this.commands.title : "";
       let box = new St.BoxLayout();
 
-      // add icon
       let icon = this.loadIcon(this.commands.icon, 'system-status-icon');
       if (!icon && menuTitle === "") { // fallback icon
         icon = new St.Icon({
@@ -109,34 +109,24 @@ const CommandMenuPopup = GObject.registerClass(
         });
       }
       if (icon) box.add_child(icon);
-      // add title
-      let toplabel = new St.Label({
+
+      let text = new St.Label({
         text: menuTitle,
         y_expand: true,
         y_align: Clutter.ActorAlign.CENTER
       });
-      box.add_child(toplabel);
+      box.add_child(text);
       this.add_child(box);
 
-      // add menu
-      let level = 0;
-      this.populateMenuItems(this.menu, this.commands.menu, level);
-
-      if (this.commandMenuSettings.get_boolean('edit-button-visible')) {
-        let editBtn = new PopupMenu.PopupMenuItem('Edit Commands');
-        editBtn.connect('activate', () => {
-          this.editCommandsFile();
-        });
-        this.menu.addMenuItem(editBtn);
+      // populate menu items
+      if ((!Array.isArray(this.commands.menu) || this.commands.menu.length === 0)) {
+        this.commands.menu = [{
+          title: "Customize This Menu...",
+          icon: 'preferences-system-symbolic',
+          command: "gnome-extensions prefs command-menu2@goldentree1.github.com"
+        }];
       }
-
-      if (this.commandMenuSettings.get_boolean('reload-button-visible')) {
-        let reloadBtn = new PopupMenu.PopupMenuItem('Reload');
-        reloadBtn.connect('activate', () => {
-          this.reloadExtension();
-        });
-        this.menu.addMenuItem(reloadBtn);
-      }
+      this.populateMenuItems(this.menu, this.commands.menu, 0);
     }
   });
 
@@ -153,17 +143,9 @@ export default class CommandMenuExtension extends Extension {
     this.enable();
   }
 
-  editCommandsFile() {
-    // Check if ~/.commands.json exsists (if not create it)
-    let file = Gio.file_new_for_path(GLib.get_home_dir() + '/.commands.json');
-    if (!file.query_exists(null)) {
-      file.replace_contents(JSON.stringify(commands), null, false, 0, null);
-    }
-    // Edit ~/.commands.json
-    Gio.AppInfo.launch_default_for_uri('file://' + GLib.get_home_dir() + '/.commands.json', null).launch(null, null);
-  }
+  enable() {
+    this._settings = this.getSettings();
 
-  addCommandMenus() {
     // load cmds
     const filePath = ".commands.json";
     const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
@@ -180,41 +162,30 @@ export default class CommandMenuExtension extends Extension {
     } catch (e) {
       menus.push({ menu: [] });
     }
+
     // add menus to panel
     menus.forEach((menu, i) => {
-      const popup = new CommandMenuPopup(
-        menu,
-        this._settings,
-        () => this.reloadExtension(),
-        () => this.editCommandsFile()
-      );
-
+      const popup = new CommandMenuPopup(menu, this._settings);
       let index = Number.isInteger(+menu.index) ? +menu.index : 1;
       let pos = (menu.position !== 'right' && menu.position !== 'center') ? menu.position : 'left';
       Main.panel.addToStatusArea(`commandMenu2_${i}`, popup, index, pos);
       this.cmdMenus.push(popup);
     });
 
+    // reload as required
+    this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
+      this.reloadExtension();
+    }));
+
     function parseMenu(obj) {
       if (obj instanceof Object && obj.menu instanceof Array) { // object menu
-        return { ...obj, menu: [...obj.menu, { type: 'separator' }] };
+        return { ...obj, menu: [...obj.menu] };
       } else if (obj instanceof Array) { // simple array menu
-        return { menu: [...obj, { type: 'separator' }] };
+        return { menu: [...obj] };
       } else {
         return { menu: [] };
       }
     }
-  }
-
-  enable() {
-    this._settings = this.getSettings();
-    this.addCommandMenus();
-    this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
-      this.reloadExtension();
-    }));
-    this._settingsIds.push(this._settings.connect('changed::edit-counter', () => {
-      this.editCommandsFile();
-    }));
   }
 
   disable() {

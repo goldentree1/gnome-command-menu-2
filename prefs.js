@@ -509,6 +509,7 @@ class GeneralPreferencesPage extends Adw.PreferencesPage {
       actionGroup.add_action(deleteAction);
 
       const upAction = new Gio.SimpleAction({ name: 'up' });
+
       upAction.connect('activate', () => {
         if (i > 0) {
           const temp = this._menus[i - 1];
@@ -544,7 +545,7 @@ class GeneralPreferencesPage extends Adw.PreferencesPage {
 export default class CommandMenuExtensionPreferences extends ExtensionPreferences {
 
   fillPreferencesWindow(window) {
-    window.set_default_size(800, 1000);
+    window.set_default_size(800, 850);
     window._settings = this.getSettings();
 
     var filePath = ".commands.json";
@@ -646,6 +647,9 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         // TODO this isnt safe yet
         const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
         GLib.file_set_contents(targetPath, JSON.stringify(menus, null, 2));
+        // Force menu reload via settings tick
+        let rc = window._settings.get_int('restart-counter');
+        window._settings.set_int('restart-counter', rc + 1);
       }
     });
 
