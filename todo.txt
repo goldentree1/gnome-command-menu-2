@@ -3,9 +3,11 @@ Done:
  - Submenu icons
  - Custom filepath icons
  - Change menu position (left/right/center) and indexing
+ - Allow multiple menus!
+
+VERY CLOSE:
+ - GUI for .commands.json
 
 Todo:
- - Allow multiple menus!
  - Make .commands.json path changeable
  - Nested submenus
- - GUI for .commands.json ... (apparently a react web one was in development?). Editing from Extension Manager would be ideal.

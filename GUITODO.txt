@@ -10,10 +10,9 @@ Menu Editor:
  - Add item Submenu
  - left/right/center combobox
  - index (auto tick or number incr/decr item)
- - Add Browse dialog to icon (just make a dialog that tells user they can use sys icons and give a link, or button to actually browse file)
+ - Add Find button for icon prefs (just make a dialog that tells user a short list of sys icons and give a link to more, or button to browse file)
     should be done on menu title and all menu items
- - refresh icon when changed
- - Do insert/duplicate/delete functionality on menu item (DELETE DONE!)
+ - Refresh icon when changed (on apply changes button or continuous?)
 
 General:
  - List of menus -- DONE

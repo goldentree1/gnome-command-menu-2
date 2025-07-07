@@ -7,10 +7,12 @@ TODO insert example images here!
 This project is forked from [Command Menu by arunk140](https://github.com/arunk140/gnome-command-menu) and includes changes I gradually made to keep it working throughout recent GNOME versions (46+). 
 
 It also adds the following features:
-- Submenus can have icons
-- Icons can be loaded from a filepath
+- Menu editor in preferences
+- Multiple menus
 - Change the menu position (left, center, or right)
 - Change the index position (for example, you could place the menu on the left OR right of the activities button)
+- Submenus can have icons
+- Icons can be loaded from a filepath
 
 ---
 
