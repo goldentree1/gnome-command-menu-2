@@ -16,10 +16,10 @@ import GObject from 'gi://GObject';
 
 let draggedRow = null;
 
-export default class commandsUI extends Adw.PreferencesPage {
+export default class CommandsUI extends Adw.PreferencesPage {
     static {
         GObject.registerClass({
-            GTypeName: 'commandsUI',
+            GTypeName: 'commandMenu2CommandsUIPrefs',
         }, this);
     }
 
@@ -65,42 +65,7 @@ export default class commandsUI extends Adw.PreferencesPage {
         saveButton.set_tooltip_text(_('Save and Reload'));
         saveButton.connect('clicked', () => {
             log("[CMDMENU_PREFS]", "clicked save!");
-
-            const newMenu = [];
-            const stack = [{ depth: -1, items: newMenu }];
-
-            let row = this.commandsListBox.get_first_child();
-            while (row) {
-                const item = row._item;
-                const depth = row._depth || 0;
-                log('[CMDMENU_PREFS]', item);
-
-                const newItem = {
-                    type: item.type,
-                    title: item.title || '',
-                    icon: item.icon || undefined,
-                    command: item.command || '',
-                };
-
-                // Handle nested submenu logic
-                while (stack.length > 1 && depth <= stack[stack.length - 1].depth) {
-                    stack.pop();
-                }
-
-                // Add to current parent's items array
-                stack[stack.length - 1].items.push(newItem);
-
-                // If this is a submenu, push to stack for following items
-                if (item.type === 'submenu') {
-                    newItem.submenu = [];
-                    stack.push({ depth, items: newItem.submenu });
-                }
-
-                row = row.get_next_sibling();
-            }
-
-            this.menus[this.menuIdx].menu = newMenu;
-
+            menu.menu = this._commandsListBox_toMenu();
             try {
                 const json = JSON.stringify(this.menus, null, 2);
                 const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
@@ -117,60 +82,125 @@ export default class commandsUI extends Adw.PreferencesPage {
 
         // menu popup customiser
         const settingsGroup1 = new Adw.PreferencesGroup();
-        {
-            const titleExpanderRow = new Adw.ExpanderRow({
-                title: _('Menu Title'),
-                subtitle: _('Customize the title, icon and position of the menu.'),
-            });
-            const entryRowTitle = new Adw.EntryRow({
-                title: _(`Position`),
-                text: this.menus[this.menuIdx].position || ''
-            });
-            entryRowTitle.connect('changed', (entry) => {
-                this.menus[this.menuIdx].title = entry.get_text();
-            });
-            const entryRowIcon = new Adw.EntryRow({
-                title: _(`Index`),
-                text: this.menus[this.menuIdx].index || ''
-            });
-            entryRowIcon.connect('changed', (entry) => {
-                this.menus[this.menuIdx].index = entry.get_text() || undefined;
-            });
-            const entryRowPosition = new Adw.EntryRow({
-                title: _(`Menu title`),
-                text: this.menus[this.menuIdx].title || ''
-            });
-            entryRowPosition.connect('changed', (entry) => {
-                this.menus[this.menuIdx].title = entry.get_text() || '';
-            });
-            const entryRowIndex = new Adw.EntryRow({
-                title: _(`Menu icon`),
-                text: this.menus[this.menuIdx].icon || ''
-            });
-            entryRowIndex.connect('changed', (entry) => {
-                this.menus[this.menuIdx].icon = entry.get_text() || undefined;
-            });
+        // title row
+        const titleExpanderRow = new Adw.ExpanderRow({
+            title: _('Menu Title'),
+            subtitle: _('Customize the title, icon and position of the menu.'),
+        });
+        const entryRowTitle = new Adw.EntryRow({
+            title: _(`Title`),
+            text: menu.title || ''
+        });
+        entryRowTitle.connect('changed', (entry) => {
+            menu.title = entry.get_text();
+        });
+        // icon row
+        const entryRowIcon = new Adw.EntryRow({
+            title: _(`Menu icon`),
+            text: menu.icon || ''
+        });
+        entryRowIcon.connect('changed', (entry) => {
+            menu.icon = entry.get_text() || undefined;
+        });
+        const validPositions = ['left', 'center', 'right'];
+        let currentPosition = menu.position;
+        if (!validPositions.includes(currentPosition)) currentPosition = 'left';
 
-            settingsGroup1.add(titleExpanderRow);
-            titleExpanderRow.add_row(entryRowPosition);
-            titleExpanderRow.add_row(entryRowIndex);
-            titleExpanderRow.add_row(entryRowTitle);
-            titleExpanderRow.add_row(entryRowIcon);
+        // position row (left/right/center)
+        const positionComboRow = new Adw.ComboRow({
+            title: _('Position'),
+            model: Gtk.StringList.new(['left', 'center', 'right']),
+            selected: validPositions.indexOf(currentPosition),
+        });
+        positionComboRow.connect('notify::selected', row => {
+            const selected = validPositions[row.get_selected()];
+            menu.position = selected;
+        });
+        const entryRowIdx = new Adw.EntryRow({
+            title: _(`Index`),
+            text: String(menu.index),
+        });
+        entryRowIdx.connect('changed', (entry) => {
+            menu.index = entry.get_text() || undefined;
+        });
+
+        // index row
+        const indexRowBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 12,
+            halign: Gtk.Align.END,
+            hexpand: true,
+        });
+        const autoIndexLabel = new Gtk.Label({
+            label: _('Auto'),
+            xalign: 0,
+            valign: Gtk.Align.CENTER,
+        });
+        const autoIndexSwitch = new Gtk.Switch({
+            valign: Gtk.Align.CENTER,
+            halign: Gtk.Align.START,
+        });
+        const indexPicker = new Gtk.SpinButton({
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 100,
+                step_increment: 1,
+                page_increment: 5,
+                value: 1,
+            }),
+            valign: Gtk.Align.CENTER,
+            halign: Gtk.Align.END,
+            numeric: true,
+        });
+        const initialValue = menu.index;
+        if (Number.isInteger(+initialValue)) {
+            autoIndexSwitch.set_active(false);
+            indexPicker.set_value(+initialValue);
+            indexPicker.set_visible(true);
+        } else { // not int/intstring: use auto-index
+            autoIndexSwitch.set_active(true);
+            indexPicker.set_visible(false);
         }
+        autoIndexSwitch.connect('notify::active', sw => {
+            const isAuto = sw.get_active();
+            indexPicker.set_visible(!isAuto);
+            menu.index = isAuto ? undefined : indexPicker.get_value_as_int();
+        });
+        indexPicker.connect('value-changed', spin => {
+            if (!autoIndexSwitch.get_active()) {
+                menu.index = spin.get_value_as_int();
+            }
+        });
+        indexRowBox.append(autoIndexLabel);
+        indexRowBox.append(autoIndexSwitch);
+        indexRowBox.append(indexPicker);
+        const indexActionRow = new Adw.ActionRow({
+            title: _('Index'),
+        });
+        indexActionRow.add_suffix(indexRowBox);
+        indexActionRow.set_activatable_widget(autoIndexSwitch);
+        indexActionRow.set_activatable(false);
 
-        const description = new Gtk.Label({
+        settingsGroup1.add(titleExpanderRow);
+        // titleExpanderRow.add_row(entryRowPosition);
+        titleExpanderRow.add_row(entryRowTitle);
+        titleExpanderRow.add_row(entryRowIcon);
+        titleExpanderRow.add_row(positionComboRow);
+        titleExpanderRow.add_row(indexActionRow);
+
+        // dragDropDescription      add button + add menu
+        const dragDropDescription = new Gtk.Label({
             label: _("Drag and drop to rearrange menu items"),
             wrap: true,
             xalign: 0,
             hexpand: true,
             halign: Gtk.Align.START
         });
-        description.get_style_context().add_class('dim-label');
-
-        // add button + menu
-        const rowBox = new Gtk.Box({
+        dragDropDescription.get_style_context().add_class('dim-label');
+        const addRow = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 6,
+            margin_bottom: 3,
             halign: Gtk.Align.FILL,
             hexpand: true,
         });
@@ -187,56 +217,79 @@ export default class commandsUI extends Adw.PreferencesPage {
         addButtonBox.append(addLabel);
         addButton.set_child(addButtonBox);
         addButton.connect('clicked', () => {
-
-            // TODO - this and insert others... MAY NEED REFACTOR CUZ PRETTY FUCKD RIGHT NOW TO REFRESH
-
-            // // Step 1: Insert the new row at the top (or any desired position)
-            // const newRow = new Gtk.Box({
-            //     orientation: Gtk.Orientation.HORIZONTAL,
-            //     spacing: 12,
-            //     margin_top: 6,
-            //     margin_bottom: 6,
-            //     margin_start: 12,
-            //     margin_end: 12,
-            //     valign: Gtk.Align.CENTER,
-            // });
-
-            // // Construct new row content here...
-
-            // this.commandsListBox.insert(newRow, 0);  // Insert the new row at the top
-
-            // // Step 2: Optionally modify the menu data
-            // this.menus[this.menuIdx].menu.unshift({
-            //     title: 'New Menu Item',
-            //     icon: 'utilities-terminal',
-            //     command: 'notify-send hello'
-            // });
-
-            // // Step 3: Repopulate the listbox with the updated menu
-            // this.commandsListBox.remove_all();  // Clear current items
-            // this.updateMenus();  // Or loop through the menu data and add it back
-            // this.commandsListBox.insert(newRow, 0);
-            // // this.menus[this.menuIdx].menu = [
-            // //     {
-            // //         title: 'New Menu Item',
-            // //         icon: 'utilities-terminal',
-            // //         command: 'notify-send hello'
-            // //     },
-            // //     ...this.menus[this.menuIdx].menu
-            // // ];
-
+            this.populateCommandsListBox(this.commandsListBox, 0, [{
+                title: 'New Command',
+                icon: 'utilities-terminal',
+                command: 'notify-send hello',
+            }]);
+            setTimeout(this._scrollToBottom, 100);
         });
 
-        const menuModel = new Gio.Menu();
-        menuModel.append(_("Add Command"), 'app.addCommand');
-        menuModel.append(_("Add Separator"), 'app.addSeparator');
-        menuModel.append(_("Add Label"), 'app.addLabel');
-        menuModel.append(_("Add Submenu"), 'app.addSubmenu');
+        const gMenu = new Gio.Menu();
+        gMenu.append(_('Add Command'), 'addmenu.addCommand');
+        gMenu.append(_('Add Separator'), 'addmenu.addSeparator');
+        gMenu.append(_('Add Label'), 'addmenu.addLabel');
+        gMenu.append(_('Add Submenu'), 'addmenu.addSubmenu');
+
         const addMenuButton = new Gtk.MenuButton({
             icon_name: 'pan-down-symbolic',
-            menu_model: menuModel,
-            halign: Gtk.Align.END,
+            menu_model: gMenu,
+            has_frame: true,
+            valign: Gtk.Align.CENTER,
         });
+
+        const addMenuActions = new Gio.SimpleActionGroup();
+
+        const addCommandAction = new Gio.SimpleAction({ name: 'addCommand' });
+        addCommandAction.connect('activate', () => {
+            this.populateCommandsListBox(this.commandsListBox, 0, [{
+                title: 'New Command',
+                icon: 'utilities-terminal',
+                command: 'notify-send hello',
+            }]);
+            setTimeout(this._scrollToBottom, 100);
+        });
+        addMenuActions.add_action(addCommandAction);
+
+        const addSeparatorAction = new Gio.SimpleAction({ name: 'addSeparator' });
+        addSeparatorAction.connect('activate', () => {
+            this.populateCommandsListBox(this.commandsListBox, 0, [{
+                type: 'separator',
+            }]);
+            setTimeout(this._scrollToBottom, 100);
+        });
+        addMenuActions.add_action(addSeparatorAction);
+
+        const addLabelAction = new Gio.SimpleAction({ name: 'addLabel' });
+        addLabelAction.connect('activate', () => {
+            this.populateCommandsListBox(this.commandsListBox, 0, [{
+                type: 'label',
+                title: 'New Label',
+            }]);
+            setTimeout(this._scrollToBottom, 100);
+        });
+        addMenuActions.add_action(addLabelAction);
+
+        const addSubmenuAction = new Gio.SimpleAction({ name: 'addSubmenu' });
+        addSubmenuAction.connect('activate', () => {
+            this.populateCommandsListBox(this.commandsListBox, 0, [{
+                type: 'submenu',
+                title: 'New Submenu',
+                submenu: [{
+                    title: 'New Command 1',
+                    icon: 'utilities-terminal',
+                    command: 'notify-send hello1',
+                }, {
+                    title: 'New Command 2',
+                    icon: 'utilities-terminal-symbolic',
+                    command: 'notify-send hello2',
+                }]
+            }]);
+            setTimeout(this._scrollToBottom, 100);
+        });
+        addMenuActions.add_action(addSubmenuAction);
+
+        addMenuButton.insert_action_group('addmenu', addMenuActions);
         const addBox = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 2,
@@ -244,17 +297,8 @@ export default class commandsUI extends Adw.PreferencesPage {
         });
         addBox.append(addButton);
         addBox.append(addMenuButton);
-        rowBox.append(description);
-        rowBox.append(addBox);
-        const descriptionBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            spacing: 6,
-            margin_top: 6,
-            margin_bottom: 6,
-            margin_start: 12,
-            margin_end: 12,
-        });
-        descriptionBox.append(rowBox);
+        addRow.append(dragDropDescription);
+        addRow.append(addBox);
 
         // menu commands editor listbox
         const settingsGroup2 = new Adw.PreferencesGroup();
@@ -278,72 +322,14 @@ export default class commandsUI extends Adw.PreferencesPage {
 
         this._scroller = scroller;
 
-        settingsGroup2.add(descriptionBox);
+        settingsGroup2.add(addRow);
         settingsGroup2.add(box);
 
         this.add(settingsGroup0);
         this.add(settingsGroup1);
         this.add(settingsGroup2);
 
-        this.populateCommandsListBox(this.commandsListBox, 0, this.menus[this.menuIdx].menu);
-
-    }
-
-    updateMenus() {
-        this.commandsListBox.remove_all();  // Clear current list
-
-        // Iterate through the menus and create rows
-        for (let i = 0; i < this.menus[this.menuIdx].menu.length; i++) {
-            const menu = this.menus[this.menuIdx].menu[i];
-
-            // Create a new row with your desired content
-            const row = new Gtk.Box({
-                orientation: Gtk.Orientation.HORIZONTAL,
-                spacing: 12,
-                margin_top: 6,
-                margin_bottom: 6,
-                margin_start: 12,
-                margin_end: 12,
-                valign: Gtk.Align.CENTER,
-            });
-
-            const menuLabel = new Gtk.Label({
-                use_markup: true,
-                label: `<b>Menu ${i + 1}:</b>`,
-                xalign: 0,
-            });
-
-            let icon = menu.icon || '';
-            if (icon.startsWith('~/') || icon.startsWith('$HOME/')) {
-                icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
-            }
-            if (!icon.startsWith('/')) {
-                icon = GLib.build_filenamev([GLib.get_home_dir(), icon]);
-            }
-
-            const iconWidget = (icon.includes('/') || icon.includes('.'))
-                ? Gtk.Image.new_from_file(icon)
-                : Gtk.Image.new_from_icon_name(icon || 'image-missing-symbolic');
-
-            iconWidget.add_css_class('dim-label');
-            const labelEnd = new Gtk.Label({
-                label: menu.title || '',
-                xalign: 5,
-            });
-
-            const leftBox = new Gtk.Box({ spacing: 6 });
-            leftBox.set_hexpand(true);
-            leftBox.set_halign(Gtk.Align.START);
-            leftBox.set_valign(Gtk.Align.CENTER);
-            leftBox.append(menuLabel);
-            leftBox.append(iconWidget);
-            leftBox.append(labelEnd);
-
-            row.append(leftBox);
-
-            // Add row to the list
-            this.commandsListBox.append(row);
-        }
+        this.populateCommandsListBox(this.commandsListBox, 0, menu.menu);
     }
 
     populateCommandsListBox(listBox, depth, items) {
@@ -410,7 +396,7 @@ export default class commandsUI extends Adw.PreferencesPage {
 
             // menu button (add/delete)
             const gMenu = new Gio.Menu();
-            gMenu.append(_('Insert new'), 'row.insert');
+            // gMenu.append(_('Insert new'), 'row.insert');
             gMenu.append(_('Duplicate'), 'row.duplicate');
             gMenu.append(_('Delete'), 'row.delete');
 
@@ -444,14 +430,12 @@ export default class commandsUI extends Adw.PreferencesPage {
 
             const duplicateAction = new Gio.SimpleAction({ name: 'duplicate' });
             duplicateAction.connect('activate', () => {
-
+                this.populateCommandsListBox(this.commandsListBox, 0, [item]);
             });
             actionGroup.add_action(duplicateAction);
 
             row.insert_action_group('row', actionGroup);
             row.add_suffix(menuButton);
-            row.insert_action_group('row', actionGroup);
-
 
             // drag/drop setup
 
@@ -507,6 +491,52 @@ export default class commandsUI extends Adw.PreferencesPage {
                 this.populateCommandsListBox(listBox, depth + 1, item.submenu);
             }
         }
+    }
+
+    /** 
+     * Listbox doesnt support nesting, but we've done it by adding _depth var to list.
+     * This converts list's depth-based menu to the .commands.json menu
+     */
+    _commandsListBox_toMenu() {
+        const newMenu = [];
+        const stack = [{ depth: -1, items: newMenu }];
+
+        let row = this.commandsListBox.get_first_child();
+        while (row) {
+            const item = row._item;
+            const depth = row._depth || 0;
+            const newItem = {
+                type: item.type || undefined,
+                title: item.title || '',
+                icon: item.icon || undefined,
+                command: item.command || '',
+            };
+
+            // submenu
+            while (stack.length > 1 && depth <= stack[stack.length - 1].depth) {
+                stack.pop();
+            }
+
+            stack[stack.length - 1].items.push(newItem);
+
+            // submenu
+            if (item.type === 'submenu') {
+                newItem.submenu = [];
+                stack.push({ depth, items: newItem.submenu });
+            }
+
+            row = row.get_next_sibling();
+        }
+        return newMenu;
+    }
+
+    _scrollToBottom() {
+        GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            const adj = this._scroller.get_vadjustment?.();
+            if (!adj) return GLib.SOURCE_REMOVE;
+            adj.set_value(adj.get_upper() - adj.get_page_size());
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     _onRowDropped(value, y) {

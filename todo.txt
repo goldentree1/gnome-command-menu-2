@@ -5,7 +5,7 @@ Done:
  - Change menu position (left/right/center) and indexing
  - Allow multiple menus!
 
-VERY CLOSE:
+Roughly done:
  - GUI for .commands.json
 
 Todo:

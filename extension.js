@@ -166,8 +166,8 @@ export default class CommandMenuExtension extends Extension {
     // add menus to panel
     menus.forEach((menu, i) => {
       const popup = new CommandMenuPopup(menu, this._settings);
-      let index = Number.isInteger(+menu.index) ? +menu.index : 1;
-      let pos = (menu.position !== 'right' && menu.position !== 'center') ? menu.position : 'left';
+      const index = Number.isInteger(+menu.index) ? +menu.index : 1;
+      const pos = ['left', 'center', 'right'].includes(menu.position) ? menu.position : 'left';
       Main.panel.addToStatusArea(`commandMenu2_${i}`, popup, index, pos);
       this.cmdMenus.push(popup);
     });
