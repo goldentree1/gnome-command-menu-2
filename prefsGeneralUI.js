@@ -123,9 +123,9 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     const templates = [
       {
-        name: "macOS Clone",
+        name: "Apple Menu",
         image: "screenshots/example-macos.png",
-        sourceFile: "examples/macos.json"
+        sourceFile: "examples/applemenu.json"
       },
       {
         name: "Penguin Menu",

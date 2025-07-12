@@ -1,10 +1,10 @@
 {
-    "icon": "~/.local/share/gnome-shell/extensions/command-menu2@goldentree1.github.com/icons/apple.png",
+    "icon": "utilities-terminal-symbolic",
     "position": "left",
     "index": 0,
     "menu": [
         {
-            "title": "About This Mac",
+            "title": "About This Linux",
             "command": "bash -c 'notify-send \"System Info\" \"$(uname -s) $(lsb_release -d | cut -d: -f2 | xargs) $(uname -r)\"'"
         },
         {
