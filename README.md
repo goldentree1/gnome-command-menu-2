@@ -65,6 +65,59 @@ This extension reads the configuration stored in [~/.commands.json](~/.commands.
 5. Click 'Apply Changes' to see your changes!
 ![Command Menu Screenshot](screenshots/4-done.jpg)
 
+### Manual configuration guide:
+Open ~/.commands.json in a text editor and start editing! You will need to disable and re-enable the extension after to apply your changes.
+
+Here's an example configuration for two menus:
+
+```json
+[
+    {
+        "title": "Apps",
+        "menu": [
+            {
+                "title": "Web Browser",
+                "command": "firefox",
+                "icon": "web-browser-symbolic"
+            },
+            {
+                "title": "Files",
+                "command": "nautilus",
+                "icon": "folder"
+            },
+            {
+                "title": "Terminal",
+                "command": "gnome-terminal",
+                "icon": "utilities-terminal"
+            }
+        ]
+    },
+    {
+        "title": "Media",
+        "icon": "folder-symbolic",
+        "position": "center",
+        "index": 0,
+        "menu": [
+            {
+                "title": "Pictures",
+                "command": "nautilus Pictures",
+                "icon": "folder-pictures-symbolic"
+            },
+            {
+                "title": "Music",
+                "command": "nautilus Music",
+                "icon": "folder-music-symbolic"
+            },
+            {
+                "title": "Videos",
+                "command": "nautilus Videos",
+                "icon": "folder-videos-symbolic"
+            }
+        ]
+    }
+]
+```
+2. Disable the extension, then re-enable it to apply your changes.
 
 ## Contributions
 I would love to hear about any bugs, suggested changes or feature ideas you may have! Please leave an issue or pull request on Github.
