@@ -240,17 +240,19 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         label: `<b>Menu ${i + 1}:</b>`,
         xalign: 0,
       });
+
+      let iconWidget;
       let icon = menu.icon || '';
-      if (icon.startsWith('~/') || icon.startsWith('$HOME/')) {
-        icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+      if (icon.includes('/') || icon.includes('.')) {
+        if (icon.startsWith('~/') || icon.startsWith('$HOME/')) {
+          icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+        }
+        iconWidget = Gtk.Image.new_from_file(icon);
+      } else {
+        iconWidget = Gtk.Image.new_from_icon_name(icon);
       }
-      if (!icon.startsWith('/')) {
-        icon = GLib.build_filenamev([GLib.get_home_dir(), icon]);
-      }
-      const iconWidget = (icon.includes('/') || icon.includes('.'))
-        ? Gtk.Image.new_from_file(icon)
-        : Gtk.Image.new_from_icon_name(icon || 'image-missing-symbolic');
       iconWidget.add_css_class('dim-label');
+
       const labelEnd = new Gtk.Label({
         label: menu.title || '',
         xalign: 5,

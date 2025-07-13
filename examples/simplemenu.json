@@ -1,17 +1,19 @@
-[
-    {
-        "title": "Web Browser",
-        "command": "firefox",
-        "icon": "web-browser-symbolic"
-    },
-    {
-        "title": "Files",
-        "command": "nautilus",
-        "icon": "folder"
-    },
-    {
-        "title": "Terminal",
-        "command": "gnome-terminal",
-        "icon": "utilities-terminal"
-    }
-]
+{
+    "menu": [
+        {
+            "title": "Web Browser",
+            "command": "firefox",
+            "icon": "web-browser-symbolic"
+        },
+        {
+            "title": "Files",
+            "command": "nautilus",
+            "icon": "folder"
+        },
+        {
+            "title": "Terminal",
+            "command": "gnome-terminal",
+            "icon": "utilities-terminal"
+        }
+    ]
+}
