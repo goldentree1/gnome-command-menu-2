@@ -190,7 +190,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
         // dragDropDescription      add button + add menu
         const dragDropDescription = new Gtk.Label({
-            label: _("Drag & drop to rearrange, then apply changes"),
+            label: _("Drag & drop to rearrange, then 'Apply Changes'."),
             wrap: true,
             xalign: 0,
             hexpand: true,
@@ -222,11 +222,11 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 icon: 'utilities-terminal',
                 command: 'notify-send hello',
             }]);
-            setTimeout(this._scrollToBottom, 100);
+            this._scrollToBottom();
         });
 
         const gMenu = new Gio.Menu();
-        gMenu.append(_('Add Command'), 'addmenu.addCommand');
+        gMenu.append(_('Add Menu Item'), 'addmenu.addCommand');
         gMenu.append(_('Add Separator'), 'addmenu.addSeparator');
         gMenu.append(_('Add Label'), 'addmenu.addLabel');
         gMenu.append(_('Add Submenu'), 'addmenu.addSubmenu');
@@ -247,7 +247,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 icon: 'utilities-terminal',
                 command: 'notify-send hello',
             }]);
-            setTimeout(this._scrollToBottom, 100);
+            this._scrollToBottom();
         });
         addMenuActions.add_action(addCommandAction);
 
@@ -256,7 +256,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
             this.populateCommandsListBox(this.commandsListBox, 0, [{
                 type: 'separator',
             }]);
-            setTimeout(this._scrollToBottom, 100);
+            this._scrollToBottom();
         });
         addMenuActions.add_action(addSeparatorAction);
 
@@ -266,7 +266,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 type: 'label',
                 title: 'New Label',
             }]);
-            setTimeout(this._scrollToBottom, 100);
+            this._scrollToBottom();
         });
         addMenuActions.add_action(addLabelAction);
 
@@ -285,7 +285,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                     command: 'notify-send hello2',
                 }]
             }]);
-            setTimeout(this._scrollToBottom, 100);
+            this._scrollToBottom();
         });
         addMenuActions.add_action(addSubmenuAction);
 
@@ -396,9 +396,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
             // menu button (add/delete)
             const gMenu = new Gio.Menu();
-            // gMenu.append(_('Insert new'), 'row.insert');
-            // TODO DUPLICATE EDITS THE ORIGINAL TOO!!!! THEYRE LINKED SOMEHOW - SAME REF?
-            // gMenu.append(_('Duplicate'), 'row.duplicate');
+            gMenu.append(_('Duplicate'), 'row.duplicate');
             gMenu.append(_('Delete'), 'row.delete');
 
             const menuButton = new Gtk.MenuButton({
@@ -431,7 +429,8 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
             const duplicateAction = new Gio.SimpleAction({ name: 'duplicate' });
             duplicateAction.connect('activate', () => {
-                this.populateCommandsListBox(this.commandsListBox, 0, [item]);
+                this.populateCommandsListBox(this.commandsListBox, 0, [JSON.parse(JSON.stringify(item))]);
+                this._scrollToBottom();
             });
             actionGroup.add_action(duplicateAction);
 

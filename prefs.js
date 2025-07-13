@@ -1,5 +1,6 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk'
 import { ExtensionPreferences, gettext } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import CommandsUI from './prefsCommandsUI.js';
 import GeneralPreferencesPage from './prefsGeneralUI.js';
@@ -13,6 +14,17 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     var filePath = ".commands.json";
     var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
     const menus = [];
+
+    // create default config if doesnt exist
+    if (!file.query_exists(null)) {
+      try {
+        GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
+      } catch (err) {
+        logError(err, 'Failed to create new default .commands.json file');
+      }
+    }
+
+    // load cmds
     try {
       var [ok, contents, _] = file.load_contents(null);
       if (ok) {
@@ -32,8 +44,32 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         }
       }
     } catch (e) {
-      // TODO add error screen asking if want to reset commands.json
-      logError("Could not parse ~/.commands.json in prefs.js");
+      // COULDNT PARSE COMMANDS!
+      const dialog = new Gtk.MessageDialog({
+        transient_for: window,
+        modal: true,
+        buttons: Gtk.ButtonsType.YES_NO,
+        message_type: Gtk.MessageType.ERROR,
+        text: _("Error loading configuration"),
+        secondary_text: _("Your configuration could not be parsed from ~/.commands.json. Would you like to reset it?")
+      });
+
+      dialog.connect('response', (d, response) => {
+        if (response === Gtk.ResponseType.YES) {
+          try {
+            const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+            GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
+            d.destroy();
+            imports.system.exit(0); // triggers reload if extension restarts with prefs
+          } catch (err) {
+            logError(err, 'Failed to reset commands.json');
+          }
+        } else {
+          d.destroy();
+        }
+      });
+
+      dialog.show();
     }
 
     let menuEditorPages = [];
@@ -74,7 +110,8 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
           refreshMenuEditorPages();
           logError(e, 'Failed to add commands');
         }
-        window._settings.set_int('restart-counter', window._settings.get_int('restart-counter') + 1);
+        let rc = window._settings.get_int('restart-counter');
+        window._settings.set_int('restart-counter', rc + 1);
         window.set_visible_page(generalPage);
       },
       removeMenu: (page, idx) => {
@@ -101,7 +138,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       showMenuEditor: (idx) => {
         window.set_visible_page(menuEditorPages[idx])
       },
-      triggerMenuEditorsUpdate() {
+      triggerMenuEditorsUpdate(page) {
         refreshMenuEditorPages();
         // TODO this isnt safe yet - revert if file_set_contents fails like other fns
         const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);

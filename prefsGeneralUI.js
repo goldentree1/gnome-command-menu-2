@@ -355,7 +355,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
           this._menus[i - 1] = this._menus[i];
           this._menus[i] = temp;
           this.updateMenus();
-          this._triggerMenuEditorsUpdate();
+          this._triggerMenuEditorsUpdate(this);
         }
       });
       actionGroup.add_action(upAction);
@@ -367,7 +367,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
           this._menus[i + 1] = this._menus[i];
           this._menus[i] = temp;
           this.updateMenus();
-          this._triggerMenuEditorsUpdate();
+          this._triggerMenuEditorsUpdate(this);
         }
       });
       actionGroup.add_action(downAction);
