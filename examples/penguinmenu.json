@@ -1,8 +1,8 @@
 {
     "title": "Menu",
     "icon": "~/.local/share/gnome-shell/extensions/command-menu2@goldentree1.github.com/icons/penguin.svg",
-    "position": "left",
-    "index": 0,
+    "position": "center",
+    "index": "auto",
     "menu": [
         {
             "type": "label",

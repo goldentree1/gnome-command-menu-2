@@ -1,5 +1,5 @@
 {
-    "icon": "utilities-terminal-symbolic",
+    "icon": "~/.local/share/gnome-shell/extensions/command-menu2@goldentree1.github.com/icons/apple.svg",
     "position": "left",
     "index": 0,
     "menu": [

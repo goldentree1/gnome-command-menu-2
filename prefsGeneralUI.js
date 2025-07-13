@@ -33,7 +33,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       margin_end: 12,
     });
     const description = new Gtk.Label({
-      label: gettext('Welcome to Command Menu 2! Use this app to create, remove and customize your menus - or try one of our fully-functional templates.'),
+      label: gettext('Welcome to Command Menu 2! Use this app to create, remove and customize your menus - or try one of our templates.'),
       wrap: true,
       xalign: 0
     });
@@ -123,15 +123,35 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     const templates = [
       {
+        name: "Simple Apps Menu",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/simplemenu.json"
+      },
+      {
         name: "Apple Menu",
-        image: "screenshots/example-macos.png",
+        image: "icons/applemenu.jpg",
         sourceFile: "examples/applemenu.json"
       },
       {
+        name: "Files Menu",
+        image: "icons/filesmenu.jpg",
+        sourceFile: "examples/filesmenu.json"
+      },
+      {
         name: "Penguin Menu",
-        image: "screenshots/example-penguinmenu.png",
+        image: "icons/penguinmenu.jpg",
         sourceFile: "examples/penguinmenu.json"
       },
+      {
+        name: "System Menu",
+        image: "icons/systemmenu.jpg",
+        sourceFile: "examples/systemmenu.json"
+      },
+      // {
+      //   name: "Multi Menu",
+      //   image: "icons/multimenu.jpg",
+      //   sourceFile: "examples/multimenu.json"
+      // },
     ];
 
     for (let template of templates) {
@@ -146,7 +166,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         .get_child(template.image)
         .get_path();
       let img = Gtk.Image.new_from_file(imagePath);
-      img.set_pixel_size(220);
+      img.set_pixel_size(200);
       vbox.append(img);
 
       let label = new Gtk.Label({

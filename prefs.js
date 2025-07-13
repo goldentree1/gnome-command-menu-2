@@ -32,6 +32,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         }
       }
     } catch (e) {
+      // TODO add error screen asking if want to reset commands.json
       logError("Could not parse ~/.commands.json in prefs.js");
     }
 

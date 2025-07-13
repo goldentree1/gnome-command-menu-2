@@ -1,0 +1,61 @@
+{
+    "title": "System",
+    "position": "center",
+    "icon": "preferences-system-symbolic",
+    "menu": [
+        {
+            "title": "System Monitor",
+            "command": "gnome-system-monitor",
+            "icon": "utilities-terminal-symbolic"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Settings",
+            "type": "label"
+        },
+        {
+            "title": "Settings",
+            "command": "gnome-control-center",
+            "icon": "preferences-system-symbolic"
+        },
+        {
+            "title": "Extensions",
+            "command": "bash -c 'if [ -z \"$(which extension-manager)\" ]; then flatpak run com.mattjakeman.ExtensionManager; else extension-manager; fi'",
+            "icon": "preferences-other-symbolic"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Power",
+            "type": "label"
+        },
+        {
+            "title": "Lock Screen",
+            "command": "xdg-screensaver lock",
+            "icon": "system-lock-screen-symbolic"
+        },
+        {
+            "title": "Sleep",
+            "command": "systemctl suspend",
+            "icon": "media-playback-pause-symbolic"
+        },
+        {
+            "title": "Logout",
+            "icon": "system-log-out-symbolic",
+            "command": "gnome-session-quit --logout"
+        },
+        {
+            "title": "Reboot",
+            "icon": "system-reboot-symbolic",
+            "command": "gnome-session-quit --reboot"
+        },
+        {
+            "title": "Power Off",
+            "icon": "system-shutdown-symbolic",
+            "command": "gnome-session-quit --power-off"
+        }
+    ]
+}

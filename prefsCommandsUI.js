@@ -190,7 +190,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
         // dragDropDescription      add button + add menu
         const dragDropDescription = new Gtk.Label({
-            label: _("Drag and drop to rearrange menu items"),
+            label: _("Drag & drop to rearrange, then apply changes"),
             wrap: true,
             xalign: 0,
             hexpand: true,
@@ -397,7 +397,8 @@ export default class CommandsUI extends Adw.PreferencesPage {
             // menu button (add/delete)
             const gMenu = new Gio.Menu();
             // gMenu.append(_('Insert new'), 'row.insert');
-            gMenu.append(_('Duplicate'), 'row.duplicate');
+            // TODO DUPLICATE EDITS THE ORIGINAL TOO!!!! THEYRE LINKED SOMEHOW - SAME REF?
+            // gMenu.append(_('Duplicate'), 'row.duplicate');
             gMenu.append(_('Delete'), 'row.delete');
 
             const menuButton = new Gtk.MenuButton({

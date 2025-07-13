@@ -1,0 +1,39 @@
+{
+    "title": "Files",
+    "position": "center",
+    "menu": [
+        {
+            "title": "Documents",
+            "command": "nautilus Documents",
+            "icon": "folder-documents-symbolic"
+        },
+        {
+            "title": "Downloads",
+            "command": "nautilus Downloads",
+            "icon": "folder-download-symbolic"
+        },
+        {
+            "title": "Pictures",
+            "command": "nautilus Pictures",
+            "icon": "folder-pictures-symbolic"
+        },
+        {
+            "title": "Music",
+            "command": "nautilus Music",
+            "icon": "folder-music-symbolic"
+        },
+        {
+            "title": "Videos",
+            "command": "nautilus Videos",
+            "icon": "folder-videos-symbolic"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "File System",
+            "command": "nautilus /",
+            "icon": "drive-harddisk-symbolic"
+        }
+    ]
+}
