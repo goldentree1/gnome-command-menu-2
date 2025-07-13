@@ -4,7 +4,7 @@ A GNOME Shell extension to create highly-customizable menus in the top bar. Quic
 
 Start with one of our templates - or build your own menu!
 
-![Command Menu Screenshot](screenshots/examples-collage.png)
+![Command Menu Screenshot](screenshots/examples-collage.jpg)
 
 This project is forked from [Command Menu by arunk140](https://github.com/arunk140/gnome-command-menu) and includes changes I made to keep it working in recent GNOME versions. It also includes a BUNCH of new features:
 - Menu editor GUI
@@ -46,8 +46,24 @@ This extension is not yet available on [GNOME Extensions](https://extensions.gno
 ## Usage & Configuration
 This extension reads the configuration stored in [~/.commands.json](~/.commands.json) to generate your menus. You can use the preferences app to create and customize your menus - or manually edit the configuration yourself.
 
-#### Configuring a menu example:
+### Step-by-step configuration guide:
+1. Open preferences for this extension, and click 'Edit' on the menu you want to configure:
+![Command Menu Screenshot](screenshots/1-editmenu.jpg)
+2. Click 'Add Item' to add an item to the menu. You can also click the arrow button for more add options (e.g., add a label or separator):
+![Command Menu Screenshot](screenshots/2-additem.jpg)
+3. Click the arrow on the right side of the new menu item to see configuration options:
+![Command Menu Screenshot](screenshots/3-edititem.jpg)
 
+
+    - #### Title
+        Give your menu item a custom title
+    - #### Icon
+        Icons can either be a system-icon name (e.g., "folder"), or a filepath to an icon (e.g., "~/Downloads/my-icon.jpg"). Check out [this list of system icon names](https://github.com/StorageB/icons/blob/main/GNOME48Adwaita/icons.md) you can use!
+    - #### Command
+        The command that is run when the menu item is clicked on (e.g., the command 'firefox' will start the Firefox application). You should be able to find common commands like this on Google if you are inexperienced. Our templates also have some examples. You can [learn more about commands and scripting here](https://www.freecodecamp.org/news/bash-scripting-tutorial-linux-shell-script-and-command-line-for-beginners/).
+
+5. Click 'Apply Changes' to see your changes!
+![Command Menu Screenshot](screenshots/4-done.jpg)
 
 
 ## Contributions
