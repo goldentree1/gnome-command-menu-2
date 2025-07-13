@@ -1,5 +1,5 @@
 {
-  "description": "A GNOME Shell Extension to manage shortcuts in the top bar (forked from Command Menu by arunk140). Edit the .commands.json file to add your own shortcuts.",
+  "description": "A GNOME Shell extension to create highly-customizable menus in the top bar, forked from Command Menu by arunk140. Quickly access your apps, scripts, files and more.",
   "name": "Command Menu 2",
   "shell-version": [
     "46", 

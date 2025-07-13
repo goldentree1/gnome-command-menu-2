@@ -272,10 +272,10 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       });
       const css = `
   .inline-pill {
-    background-color: rgba(0,0,0,0.75);
+    background-color: rgba(0,0,0,0.4);
     fill: white;
     color:white;
-    border-radius: 9999px;
+    border-radius: 5px;
     padding: 4px 8px;
   }
 `;
