@@ -49,7 +49,7 @@ This extension reads the configuration stored in [~/.commands.json](~/.commands.
 ### Step-by-step configuration guide:
 1. Open preferences for this extension, and click 'Edit' on the menu you want to configure:
 ![Command Menu Screenshot](screenshots/1-editmenu.jpg)
-2. Click 'Add Item' to add an item to the menu. You can also click the arrow button for more add options (e.g., add a label or separator):
+2. Click 'Add Item' to add an item to the menu. You can also click the arrow button for more options (e.g., to add a label or a separator):
 ![Command Menu Screenshot](screenshots/2-additem.jpg)
 3. Click the arrow on the right side of the new menu item to see configuration options:
 ![Command Menu Screenshot](screenshots/3-edititem.jpg)
