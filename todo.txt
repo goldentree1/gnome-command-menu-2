@@ -11,3 +11,12 @@ Roughly done:
 Todo:
  - Make .commands.json path changeable
  - Nested submenus
+ - Make Menu editor GUI better:
+    - Icons selector (basic general icons on most systems, provide link to more, and provide 'Browse Files...' button for personal icons)
+    - Run App, Open File, OR Custom Command (current default) options for command editor??? 
+      Would be nice to at least let the user see that its running ONLY a program (e.g., 'firefox' has no CLI args, so it could probably be considered just launching a program? 'nautilus xxx' is Open Dir, file is 'open xxx'?, otherwise custom command?)
+    - Refresh button next to 'Edit manually'.
+    - Apply Changes... remove and apply instantly? (use gsettings instead?)
+ - Apply prefs changes instantly via gsettings
+ - New menu item: TOGGLE (+ monitor cmd? When menu is opened, run that cmd if it exists to check if should be on or off state)
+ - New menu item: Dynamic (a 'generate' cmd or something along with normal cmd. 'generate' will )
