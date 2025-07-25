@@ -153,7 +153,8 @@ export default class CommandMenuExtension extends Extension {
     try {
       let [ok, contents, _] = file.load_contents(null);
       if (!ok) throw Error();
-      const json = JSON.parse(contents);
+      const decoder = new TextDecoder();
+      const json = JSON.parse(decoder.decode(contents));
       if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
         json.forEach(j => menus.push(parseMenu(j)));
       } else {

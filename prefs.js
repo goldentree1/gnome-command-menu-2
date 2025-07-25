@@ -10,145 +10,170 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
   fillPreferencesWindow(window) {
     window.set_default_size(800, 850);
     window._settings = this.getSettings();
+    this._window = window;
+    this._menuEditorPages = [];
+    this._menus = [];
 
-    var filePath = ".commands.json";
-    var file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
-    const menus = [];
+    const filePath = ".commands.json";
+    const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
 
     // create default config if doesnt exist
     if (!file.query_exists(null)) {
       try {
-        GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
+        GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]));
       } catch (err) {
         logError(err, 'Failed to create new default .commands.json file');
       }
     }
 
-    // load cmds
+    // load menus from config
     try {
-      var [ok, contents, _] = file.load_contents(null);
-      if (ok) {
-        const json = JSON.parse(contents);
-        if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
-          for (let j of json) {
-            if (j instanceof Object && j.menu instanceof Array) {
-              menus.push({ ...j, menu: j.menu });
-            } else if (j instanceof Array) {
-              menus.push({ menu: j });
-            }
-          }
-        } else if (json instanceof Object && json.menu instanceof Array) {
-          menus.push({ ...json, menu: json.menu });
-        } else if (json instanceof Array && json.length) {
-          menus.push({ menu: json });
-        }
+      let [ok, contents, _] = file.load_contents(null);
+      if (!ok) throw Error();
+      const decoder = new TextDecoder();
+      const json = JSON.parse(decoder.decode(contents));
+      if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
+        json.forEach(j => this._menus.push(parseMenu(j)));
+      } else {
+        this._menus.push(parseMenu(json));
       }
     } catch (e) {
-      // COULDNT PARSE COMMANDS!
-      const dialog = new Gtk.MessageDialog({
-        transient_for: window,
-        modal: true,
-        buttons: Gtk.ButtonsType.YES_NO,
-        message_type: Gtk.MessageType.ERROR,
-        text: _("Error loading configuration"),
-        secondary_text: _("Your configuration could not be parsed from ~/.commands.json. Would you like to reset it?")
-      });
-
-      dialog.connect('response', (d, response) => {
-        if (response === Gtk.ResponseType.YES) {
-          try {
-            const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-            GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
-            d.destroy();
-            imports.system.exit(0); // triggers reload if extension restarts with prefs
-          } catch (err) {
-            logError(err, 'Failed to reset commands.json');
-          }
-        } else {
-          d.destroy();
-        }
-      });
-
-      dialog.show();
+      // couldnt parse config - show error dialog
+      this._showConfigErrorDialog();
     }
-
-    let menuEditorPages = [];
-    const refreshMenuEditorPages = () => {
-      for (const p of menuEditorPages) window.remove(p);
-      menuEditorPages = menus.map((m, i) => new CommandsUI({
-        title: gettext(`Menu ${i + 1}`),
-        icon_name: 'document-edit-symbolic',
-        menus: menus,
-        menuIdx: i,
-        settings: window._settings,
-      }));
-      for (const p of menuEditorPages) window.add(p);
-    };
 
     const generalPage = new GeneralPreferencesPage({
       title: gettext('General'),
       icon_name: 'preferences-system-symbolic',
-      menus,
-      settings: window._settings,
-      addMenu: (page, template = null) => {
-        const addMe = template || {
-          menu: [],
-          title: `Menu ${menus.length + 1}`,
-          icon: 'utilities-terminal',
-          position: 'left'
-        };
-        menus.push(addMe);
-        page.updateMenus();
-        refreshMenuEditorPages();
-        try {
-          const json = JSON.stringify(menus, null, 2);
-          const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-          GLib.file_set_contents(filePath, json, -1);
-        } catch (e) {
-          menus.pop();
-          page.updateMenus();
-          refreshMenuEditorPages();
-          logError(e, 'Failed to add commands');
-        }
-        let rc = window._settings.get_int('restart-counter');
-        window._settings.set_int('restart-counter', rc + 1);
-        window.set_visible_page(generalPage);
-      },
-      removeMenu: (page, idx) => {
-        const ogMenus = [...menus];
-        // remove menu and save
-        menus.splice(idx, 1);
-        try {
-          // reload settings pages and extension
-          page.updateMenus();
-          refreshMenuEditorPages();
-          const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-          GLib.file_set_contents(targetPath, JSON.stringify(menus, null, 2));
-        } catch (err) {
-          logError(e, 'Failed to remove menu');
-          menus = ogMenus;
-          page.updateMenus();
-          refreshMenuEditorPages();
-        }
-
-        let rc = window._settings.get_int('restart-counter');
-        window._settings.set_int('restart-counter', rc + 1);
-        window.set_visible_page(generalPage);
-      },
-      showMenuEditor: (idx) => {
-        window.set_visible_page(menuEditorPages[idx])
-      },
-      triggerMenuEditorsUpdate(page) {
-        refreshMenuEditorPages();
-        // TODO this isnt safe yet - revert if file_set_contents fails like other fns
-        const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-        GLib.file_set_contents(targetPath, JSON.stringify(menus, null, 2));
-        let rc = window._settings.get_int('restart-counter');
-        window._settings.set_int('restart-counter', rc + 1);
-      }
+      menus: this._menus,
+      settings: this._window._settings,
+      addMenu: (page, template = null) => this._addMenu(page, template),
+      removeMenu: (page, idx) => this._removeMenu(page, idx),
+      moveMenu: (page, from, to) => this._moveMenu(page, from, to),
+      showMenuEditor: (idx) => this._window.set_visible_page(this._menuEditorPages[idx]),
     });
 
-    window.add(generalPage);
-    if (menus.length) refreshMenuEditorPages();
+    this._window.add(generalPage);
+    if (this._menus.length) this._refreshMenuEditorPages();
+    this._window.set_visible_page(generalPage);
+  }
+
+  _addMenu(generalPage, template = null) {
+    const ogMenus = [...this._menus];
+    const addMe = template || {
+      menu: [],
+      title: `Menu ${this._menus.length + 1}`,
+      icon: 'utilities-terminal',
+      position: 'left'
+    };
+    this._menus.push(addMe);
+    try {
+      const json = JSON.stringify(this._menus, null, 2);
+      const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+      GLib.file_set_contents(filePath, json);
+      generalPage.updateMenus();
+      this._refreshMenuEditorPages();
+      this._refreshExtension();
+      this._window.set_visible_page(generalPage);
+    } catch (e) { // revert on fail
+      logError(e, 'Failed to add menu');
+      this._menus = ogMenus;
+      generalPage.updateMenus();
+      this._refreshMenuEditorPages();
+    }
+  }
+
+  _removeMenu(generalPage, rmIdx) {
+    const ogMenus = [...this._menus];
+    // remove menu and save
+    this._menus.splice(rmIdx, 1);
+    try {
+      generalPage.updateMenus();
+      this._refreshMenuEditorPages();
+      const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+      GLib.file_set_contents(targetPath, JSON.stringify(this._menus, null, 2));
+      this._refreshExtension();
+      this._window.set_visible_page(generalPage);
+    } catch (err) { // revert on fail
+      logError(e, 'Failed to remove menu');
+      this._menus = ogMenus;
+      generalPage.updateMenus();
+      this._refreshMenuEditorPages();
+    }
+  }
+
+  _moveMenu(generalPage, from, to) {
+    const ogMenus = [...this._menus];
+    // try swap
+    const temp = this._menus[from];
+    this._menus[from] = this._menus[to];
+    this._menus[to] = temp;
+    try {
+      generalPage.updateMenus();
+      this._refreshMenuEditorPages();
+      const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+      GLib.file_set_contents(targetPath, JSON.stringify(this._menus, null, 2));
+      this._refreshExtension();
+      this._window.set_visible_page(generalPage);
+    } catch (err) { // revert on fail
+      logError(err, 'Failed to move menu');
+      this._menus = ogMenus;
+      generalPage.updateMenus();
+      this._refreshMenuEditorPages();
+    }
+  }
+
+  _refreshExtension() {
+    let rc = this._window._settings.get_int('restart-counter');
+    this._window._settings.set_int('restart-counter', rc + 1);
+  }
+
+  _refreshMenuEditorPages() {
+    for (const p of this._menuEditorPages) this._window.remove(p);
+    this._menuEditorPages = this._menus.map((m, i) => new CommandsUI({
+      title: gettext(`Menu ${i + 1}`),
+      icon_name: 'document-edit-symbolic',
+      menus: this._menus,
+      menuIdx: i,
+      settings: this._window._settings,
+    }));
+    for (const p of this._menuEditorPages) this._window.add(p);
+  }
+
+  _showConfigErrorDialog() {
+    const dialog = new Gtk.MessageDialog({
+      transient_for: this._window,
+      modal: true,
+      buttons: Gtk.ButtonsType.YES_NO,
+      message_type: Gtk.MessageType.ERROR,
+      text: gettext("Configuration error!"),
+      secondary_text: gettext("Your configuration could not be parsed from ~/.commands.json. Would you like to reset configuration?")
+    });
+    dialog.connect('response', (d, response) => {
+      if (response === Gtk.ResponseType.YES) {
+        try {
+          const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+          GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
+          d.destroy();
+          this._refreshExtension();
+          imports.system.exit(0); // triggers reload if extension restarts with prefs
+        } catch (err) {
+          logError(err, 'Failed to reset ~/commands.json');
+          imports.system.exit(1);
+        }
+      }
+      d.destroy();
+    });
+    dialog.show();
+  }
+}
+
+function parseMenu(obj) {
+  if (obj instanceof Object && obj.menu instanceof Array) { // object menu
+    return { ...obj, menu: [...obj.menu] };
+  } else if (obj instanceof Array) { // simple array menu
+    return { menu: [...obj] };
+  } else {
+    return { menu: [] };
   }
 }

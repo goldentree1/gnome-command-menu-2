@@ -14,33 +14,28 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
   }
 
   _init(params = {}) {
-    const { menus, addMenu, removeMenu, showMenuEditor, triggerMenuEditorsUpdate, settings, ...args } = params;
+    const { menus, addMenu, removeMenu, showMenuEditor, moveMenu, settings, ...args } = params;
     super._init(args);
 
     this._menus = menus;
     this._removeMenu = removeMenu;
     this._showMenuEditor = showMenuEditor;
-    this._triggerMenuEditorsUpdate = triggerMenuEditorsUpdate;
+    this._moveMenu = moveMenu;
 
-    // intro
+    // about / manual editor section
     const group = new Adw.PreferencesGroup();
     const descriptionBox = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
       spacing: 6,
       margin_top: 20,
       margin_bottom: 15,
-      margin_start: 12,
-      margin_end: 12,
     });
     const description = new Gtk.Label({
       label: gettext('Welcome to Command Menu 2! Use this app to create, remove and customize your menus - or try one of our templates.'),
-      wrap: true,
-      xalign: 0
+      wrap: true
     });
     description.get_style_context().add_class('dim-label');
     descriptionBox.append(description);
-    group.add(descriptionBox);
-
     const editConfigButton = new Gtk.Button({
       halign: Gtk.Align.START,
       label: gettext('Edit Config Manually'),
@@ -48,14 +43,14 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     editConfigButton.connect("clicked", () => {
       const path = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
       const uri = GLib.filename_to_uri(path, null);
-
       Gio.AppInfo.launch_default_for_uri(uri, null);
     });
-
+    // TODO add refresh btn
+    group.add(descriptionBox);
     group.add(editConfigButton);
 
+    // 'your menus' section
     const group2 = new Adw.PreferencesGroup();
-
     const headerRow = new Gtk.Box({
       orientation: Gtk.Orientation.HORIZONTAL,
       spacing: 6,
@@ -65,16 +60,11 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       margin_start: 0,
       margin_end: 0,
     });
-
     // title on left
-    const titleLabel = new Gtk.Label({
-      label: gettext("Your Menus:"),
-      xalign: 0,
-    });
+    const titleLabel = new Gtk.Label({ label: gettext("Your Menus:") });
     titleLabel.set_halign(Gtk.Align.START);
     titleLabel.set_valign(Gtk.Align.CENTER);
-    titleLabel.get_style_context().add_class('title-2');
-
+    titleLabel.get_style_context().add_class('title-3');
     // button on right
     const addMenuButton = new Gtk.Button({
       halign: Gtk.Align.END,
@@ -94,33 +84,15 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     headerRow.append(titleLabel);
     headerRow.append(spacer);
     headerRow.append(addMenuButton);
-    group2.add(headerRow);
-
-    // menus listbox
     this._listBox = new Gtk.ListBox({
       selection_mode: Gtk.SelectionMode.NONE,
     });
     this._listBox.add_css_class('boxed-list');
     this.updateMenus();
+    group2.add(headerRow);
     group2.add(this._listBox);
 
-
-    // templates
-    const group3 = new Adw.PreferencesGroup({
-      title: gettext('Templates (click to add to menus):'),
-    });
-    group3.set_margin_top(12);
-
-    const flowBox = new Gtk.FlowBox({
-      selectionMode: Gtk.SelectionMode.NONE,
-      columnSpacing: 6,
-      rowSpacing: 6,
-      margin_top: 0,
-      margin_bottom: 10,
-      margin_start: 6,
-      margin_end: 6,
-    });
-
+    // templates selector section
     const templates = [
       {
         name: "Simple Apps Menu",
@@ -147,73 +119,84 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         image: "icons/systemmenu.jpg",
         sourceFile: "examples/systemmenu.json"
       },
-      // {
-      //   name: "Multi Menu",
-      //   image: "icons/multimenu.jpg",
-      //   sourceFile: "examples/multimenu.json"
-      // },
     ];
-
+    const group3 = new Adw.PreferencesGroup({ title: gettext("Templates:") });
+    const templatesFlowBox = new Gtk.FlowBox({
+      selection_mode: Gtk.SelectionMode.NONE,
+      row_spacing: 6,
+    });
     for (let template of templates) {
-      let vbox = new Gtk.Box({
-        orientation: Gtk.Orientation.VERTICAL,
-        spacing: 6,
-        margin_bottom: 10
-      });
+      const templateInfoBox = new Gtk.Box({ spacing: 12 });
 
       const extensionObject = ExtensionPreferences.lookupByURL(import.meta.url);
       const imagePath = extensionObject.metadata.dir
         .get_child(template.image)
         .get_path();
       let img = Gtk.Image.new_from_file(imagePath);
-      img.set_pixel_size(200);
-      vbox.append(img);
+      img.set_pixel_size(256);
+      templateInfoBox.append(img);
 
-      let label = new Gtk.Label({
-        label: template.name,
-        halign: Gtk.Align.CENTER,
+      const templateTextBox = new Gtk.Box({
+        orientation: Gtk.Orientation.VERTICAL,
+        spacing: 4,
+        halign: Gtk.Align.START,
+        valign: Gtk.Align.CENTER,
+        hexpand: true,
+        margin_start: 10
       });
-      vbox.append(label);
+      const templateTitleLabel = new Gtk.Label({
+        label: template.name,
+        halign: Gtk.Align.START,
+        css_classes: ['title-4'], // optional: makes it stand out as a title
+      });
+      const templateDescriptionLabel = new Gtk.Label({
+        label: template.description ?? gettext("No description provided."),
+        wrap: true,
+        css_classes: ['dim-label'], // subtler style
+      });
+      templateTextBox.append(templateTitleLabel);
+      templateTextBox.append(templateDescriptionLabel);
+      templateInfoBox.append(templateTextBox);
 
-      let button = new Gtk.Button();
-      button.set_child(vbox);
-
-      button.set_tooltip_text(gettext("Apply this template"));
-
-      button.connect("clicked", () => {
-        let dialog = new Gtk.MessageDialog({
+      const templateBtn = new Gtk.Button();
+      templateBtn.set_child(templateInfoBox);
+      templateBtn.set_tooltip_text(gettext("Apply this template"));
+      templateBtn.connect("clicked", () => {
+        const dialog = new Gtk.MessageDialog({
           modal: true,
           transient_for: this.get_root(),
           message_type: Gtk.MessageType.QUESTION,
           buttons: Gtk.ButtonsType.OK_CANCEL,
           text: gettext(`Add template "${template.name}" as a new menu?`),
-          // secondary_text: gettext("This will overwrite your ~/.commands.json file."),
         });
-
         dialog.connect("response", (d, response) => {
           if (response === Gtk.ResponseType.OK) {
             const templatePath = extensionObject.metadata.dir
               .get_child(template.sourceFile)
               .get_path();
-            const fileData = GLib.file_get_contents(templatePath)[1];
-            addMenu(this, JSON.parse(fileData));
-
-            // reload menu
-            let rc = settings.get_int('restart-counter');
-            settings.set_int('restart-counter', rc + 1);
+            const contents = GLib.file_get_contents(templatePath)[1];
+            const decoder = new TextDecoder();
+            const json = JSON.parse(decoder.decode(contents));
+            addMenu(this, json);
           }
           d.destroy();
         });
-
         dialog.show();
       });
-
-      flowBox.insert(button, -1);
+      templatesFlowBox.insert(templateBtn, -1);
     }
 
-    group3.add(flowBox);
+    const templatesScroll = new Gtk.ScrolledWindow({
+      hscrollbar_policy: Gtk.PolicyType.NEVER,
+      vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
+      hexpand: true,
+      vexpand: true
+    });
+    templatesScroll.set_child(templatesFlowBox);
+    templatesScroll.set_size_request(-1, 330);
+    group3.add(templatesScroll);
 
-
+    // add all groups to page
     this.add(group);
     this.add(group2);
     this.add(group3);
@@ -236,9 +219,8 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
       // label
       const menuLabel = new Gtk.Label({
-        use_markup: true,
         label: `<b>Menu ${i + 1}:</b>`,
-        xalign: 0,
+        use_markup: true
       });
 
       let iconWidget;
@@ -253,10 +235,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       }
       iconWidget.add_css_class('dim-label');
 
-      const labelEnd = new Gtk.Label({
-        label: menu.title || '',
-        xalign: 5,
-      });
+      const labelEnd = new Gtk.Label({ label: menu.title || '', });
       const leftBox = new Gtk.Box({ spacing: 6 });
       leftBox.set_hexpand(true);
       leftBox.set_halign(Gtk.Align.START);
@@ -275,7 +254,6 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       const css = `
   .inline-pill {
     background-color: rgba(0,0,0,0.4);
-    fill: white;
     color:white;
     border-radius: 5px;
     padding: 4px 8px;
@@ -338,39 +316,23 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
           buttons: Gtk.ButtonsType.OK_CANCEL,
           text: `Are you sure you want to remove 'Menu ${i + 1}'?`,
         });
-
         dialog.connect("response", (d, res) => {
           if (res === Gtk.ResponseType.OK) this._removeMenu(this, i);
-          this.updateMenus();
           d.destroy();
         });
-
         dialog.show();
       });
       actionGroup.add_action(deleteAction);
 
       const upAction = new Gio.SimpleAction({ name: 'up' });
-
       upAction.connect('activate', () => {
-        if (i > 0) {
-          const temp = this._menus[i - 1];
-          this._menus[i - 1] = this._menus[i];
-          this._menus[i] = temp;
-          this.updateMenus();
-          this._triggerMenuEditorsUpdate(this);
-        }
+        if (i > 0) this._moveMenu(this, i - 1, i);
       });
       actionGroup.add_action(upAction);
 
       const downAction = new Gio.SimpleAction({ name: 'down' });
       downAction.connect('activate', () => {
-        if (i < this._menus.length - 1) {
-          const temp = this._menus[i + 1];
-          this._menus[i + 1] = this._menus[i];
-          this._menus[i] = temp;
-          this.updateMenus();
-          this._triggerMenuEditorsUpdate(this);
-        }
+        if (i < this._menus.length - 1) this._moveMenu(this, i + 1, i);
       });
       actionGroup.add_action(downAction);
 

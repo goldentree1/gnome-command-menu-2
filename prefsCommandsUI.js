@@ -64,12 +64,11 @@ export default class CommandsUI extends Adw.PreferencesPage {
         saveButton.set_child(saveBtnBox);
         saveButton.set_tooltip_text(_('Save and Reload'));
         saveButton.connect('clicked', () => {
-            log("[CMDMENU_PREFS]", "clicked save!");
-            menu.menu = this._commandsListBox_toMenu();
+            menu.menu = this._listBoxToMenu();
             try {
                 const json = JSON.stringify(this.menus, null, 2);
                 const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-                GLib.file_set_contents(filePath, json, -1);
+                GLib.file_set_contents(filePath, json);
                 settings.set_int('restart-counter', settings.get_int('restart-counter') + 1);
             } catch (e) {
                 logError(e, 'Failed to save commands');
@@ -133,7 +132,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
         });
         const autoIndexLabel = new Gtk.Label({
             label: _('Auto'),
-            xalign: 0,
             valign: Gtk.Align.CENTER,
         });
         const autoIndexSwitch = new Gtk.Switch({
@@ -192,7 +190,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
         const dragDropDescription = new Gtk.Label({
             label: _("Drag & drop to rearrange, then 'Apply Changes'."),
             wrap: true,
-            xalign: 0,
             hexpand: true,
             halign: Gtk.Align.START
         });
@@ -217,12 +214,12 @@ export default class CommandsUI extends Adw.PreferencesPage {
         addButtonBox.append(addLabel);
         addButton.set_child(addButtonBox);
         addButton.connect('clicked', () => {
-            this.populateCommandsListBox(this.commandsListBox, 0, [{
+            this._populateListBox(this.commandsListBox, 0, [{
                 title: 'New Command',
                 icon: 'utilities-terminal',
                 command: 'notify-send hello',
             }]);
-            this._scrollToBottom();
+            this._listBoxScrollToBottom();
         });
 
         const gMenu = new Gio.Menu();
@@ -242,37 +239,37 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
         const addCommandAction = new Gio.SimpleAction({ name: 'addCommand' });
         addCommandAction.connect('activate', () => {
-            this.populateCommandsListBox(this.commandsListBox, 0, [{
+            this._populateListBox(this.commandsListBox, 0, [{
                 title: 'New Command',
                 icon: 'utilities-terminal',
                 command: 'notify-send hello',
             }]);
-            this._scrollToBottom();
+            this._listBoxScrollToBottom();
         });
         addMenuActions.add_action(addCommandAction);
 
         const addSeparatorAction = new Gio.SimpleAction({ name: 'addSeparator' });
         addSeparatorAction.connect('activate', () => {
-            this.populateCommandsListBox(this.commandsListBox, 0, [{
+            this._populateListBox(this.commandsListBox, 0, [{
                 type: 'separator',
             }]);
-            this._scrollToBottom();
+            this._listBoxScrollToBottom();
         });
         addMenuActions.add_action(addSeparatorAction);
 
         const addLabelAction = new Gio.SimpleAction({ name: 'addLabel' });
         addLabelAction.connect('activate', () => {
-            this.populateCommandsListBox(this.commandsListBox, 0, [{
+            this._populateListBox(this.commandsListBox, 0, [{
                 type: 'label',
                 title: 'New Label',
             }]);
-            this._scrollToBottom();
+            this._listBoxScrollToBottom();
         });
         addMenuActions.add_action(addLabelAction);
 
         const addSubmenuAction = new Gio.SimpleAction({ name: 'addSubmenu' });
         addSubmenuAction.connect('activate', () => {
-            this.populateCommandsListBox(this.commandsListBox, 0, [{
+            this._populateListBox(this.commandsListBox, 0, [{
                 type: 'submenu',
                 title: 'New Submenu',
                 submenu: [{
@@ -285,7 +282,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                     command: 'notify-send hello2',
                 }]
             }]);
-            this._scrollToBottom();
+            this._listBoxScrollToBottom();
         });
         addMenuActions.add_action(addSubmenuAction);
 
@@ -317,7 +314,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         box.append(overlay);
 
         const dropTarget = Gtk.DropTarget.new(Gtk.ListBoxRow, Gdk.DragAction.MOVE);
-        dropTarget.connect('drop', (_target, value, _x, y) => this._onRowDropped(value, y));
+        dropTarget.connect('drop', (_target, value, _x, y) => this._listBoxOnRowDropped(value, y));
         this.commandsListBox.add_controller(dropTarget);
 
         this._scroller = scroller;
@@ -329,10 +326,10 @@ export default class CommandsUI extends Adw.PreferencesPage {
         this.add(settingsGroup1);
         this.add(settingsGroup2);
 
-        this.populateCommandsListBox(this.commandsListBox, 0, menu.menu);
+        this._populateListBox(this.commandsListBox, 0, menu.menu);
     }
 
-    populateCommandsListBox(listBox, depth, items) {
+    _populateListBox(listBox, depth, items) {
         if (!Array.isArray(items)) return;
         for (const item of items) {
             const row = new Adw.ExpanderRow({
@@ -429,8 +426,8 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
             const duplicateAction = new Gio.SimpleAction({ name: 'duplicate' });
             duplicateAction.connect('activate', () => {
-                this.populateCommandsListBox(this.commandsListBox, 0, [JSON.parse(JSON.stringify(item))]);
-                this._scrollToBottom();
+                this._populateListBox(this.commandsListBox, 0, [JSON.parse(JSON.stringify(item))]);
+                this._listBoxScrollToBottom();
             });
             actionGroup.add_action(duplicateAction);
 
@@ -488,7 +485,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
             listBox.append(row);
 
             if (item.type === "submenu") {
-                this.populateCommandsListBox(listBox, depth + 1, item.submenu);
+                this._populateListBox(listBox, depth + 1, item.submenu);
             }
         }
     }
@@ -497,7 +494,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
      * Listbox doesnt support nesting, but we've done it by adding _depth var to list.
      * This converts list's depth-based menu to the .commands.json menu
      */
-    _commandsListBox_toMenu() {
+    _listBoxToMenu() {
         const newMenu = [];
         const stack = [{ depth: -1, items: newMenu }];
 
@@ -530,7 +527,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         return newMenu;
     }
 
-    _scrollToBottom() {
+    _listBoxScrollToBottom() {
         GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             const adj = this._scroller.get_vadjustment?.();
             if (!adj) return GLib.SOURCE_REMOVE;
@@ -539,7 +536,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         });
     }
 
-    _onRowDropped(value, y) {
+    _listBoxOnRowDropped(value, y) {
         const targetRow = this.commandsListBox.get_row_at_y(y);
         if (!value || !targetRow || !draggedRow) return false;
         if (targetRow === draggedRow) return false;
