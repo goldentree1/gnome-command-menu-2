@@ -13,6 +13,8 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import CmdChooser from './prefsCmdChooser.js';
+import IconChooser from './prefsIconChooser.js';
 
 let draggedRow = null;
 
@@ -41,22 +43,11 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
         // save and apply changes button
         const settingsGroup0 = new Adw.PreferencesGroup();
-        const buttonBox = new Gtk.Box({
-            margin_top: 0,
-            margin_bottom: 0,
-            orientation: Gtk.Orientation.HORIZONTAL,
-            homogeneous: true,
-            spacing: 6,
-        });
         const saveIcon = Gtk.Image.new_from_icon_name('document-save-symbolic');
         const saveLabel = new Gtk.Label({ label: _('Apply Changes') });
         const saveBtnBox = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 6,
-            margin_top: 0,
-            margin_bottom: 0,
             halign: Gtk.Align.CENTER,
-            valign: Gtk.Align.CENTER,
         });
         saveBtnBox.append(saveIcon);
         saveBtnBox.append(saveLabel);
@@ -76,8 +67,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         });
         saveButton.set_hexpand(true);
         saveButton.set_halign(Gtk.Align.FILL);
-        buttonBox.append(saveButton);
-        settingsGroup0.add(buttonBox);
+        settingsGroup0.add(saveButton);
 
         // menu popup customiser
         const settingsGroup1 = new Adw.PreferencesGroup();
@@ -93,19 +83,40 @@ export default class CommandsUI extends Adw.PreferencesPage {
         entryRowTitle.connect('changed', (entry) => {
             menu.title = entry.get_text();
         });
+
         // icon row
+        const iconBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
         const entryRowIcon = new Adw.EntryRow({
             title: _(`Menu icon`),
-            text: menu.icon || ''
+            text: menu.icon || '',
+            hexpand: true
         });
         entryRowIcon.connect('changed', (entry) => {
             menu.icon = entry.get_text() || undefined;
         });
+        const findIconButton = new Gtk.Button({
+            label: _('Choose Icon...'),
+            halign: Gtk.Align.END,
+            margin_bottom: 5,
+            margin_top: 5,
+            margin_start: 8,
+            margin_end: 8,
+        });
+        findIconButton.connect('clicked', () => {
+            const dialog = new IconChooser(this.get_root(), (_ico) => {
+                const icon = _ico || "";
+                entryRowIcon.set_text(icon);
+                menu.icon = icon || undefined;
+            });
+            dialog.present();
+        });
+        iconBox.append(entryRowIcon);
+        iconBox.append(findIconButton);
+
+        // position row (left/right/center)
         const validPositions = ['left', 'center', 'right'];
         let currentPosition = menu.position;
         if (!validPositions.includes(currentPosition)) currentPosition = 'left';
-
-        // position row (left/right/center)
         const positionComboRow = new Adw.ComboRow({
             title: _('Position'),
             model: Gtk.StringList.new(['left', 'center', 'right']),
@@ -114,13 +125,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
         positionComboRow.connect('notify::selected', row => {
             const selected = validPositions[row.get_selected()];
             menu.position = selected;
-        });
-        const entryRowIdx = new Adw.EntryRow({
-            title: _(`Index`),
-            text: String(menu.index),
-        });
-        entryRowIdx.connect('changed', (entry) => {
-            menu.index = entry.get_text() || undefined;
         });
 
         // index row
@@ -180,13 +184,12 @@ export default class CommandsUI extends Adw.PreferencesPage {
         indexActionRow.set_activatable(false);
 
         settingsGroup1.add(titleExpanderRow);
-        // titleExpanderRow.add_row(entryRowPosition);
         titleExpanderRow.add_row(entryRowTitle);
-        titleExpanderRow.add_row(entryRowIcon);
+        titleExpanderRow.add_row(iconBox);
         titleExpanderRow.add_row(positionComboRow);
         titleExpanderRow.add_row(indexActionRow);
 
-        // dragDropDescription      add button + add menu
+        // dragDropDescription & 'add' buttons
         const dragDropDescription = new Gtk.Label({
             label: _("Drag & drop to rearrange, then 'Apply Changes'."),
             wrap: true,
@@ -234,7 +237,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
             has_frame: true,
             valign: Gtk.Align.CENTER,
         });
-
         const addMenuActions = new Gio.SimpleActionGroup();
 
         const addCommandAction = new Gio.SimpleAction({ name: 'addCommand' });
@@ -377,18 +379,62 @@ export default class CommandsUI extends Adw.PreferencesPage {
                     item.title = entryRowTitle.text;
                     row.set_title(item.title || _('Untitled'));
                 });
-                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
+                // icon editor
+                const iconBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '', hexpand: true });
                 entryRowIcon.connect('notify::text', () => {
                     item.icon = entryRowIcon.text;
                 });
-                const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '' });
+                const findIconButton = new Gtk.Button({
+                    label: _('Choose Icon...'),
+                    halign: Gtk.Align.END,
+                    margin_bottom: 5,
+                    margin_top: 5,
+                    margin_start: 8,
+                    margin_end: 8,
+                });
+                findIconButton.connect('clicked', () => {
+                    const dialog = new IconChooser(this.get_root(), (_ico) => {
+                        if (_ico) {
+                            const icon = _ico || "";
+                            entryRowIcon.set_text(icon);
+                            item.icon = icon;
+                        }
+                    });
+                    dialog.present();
+                });
+                iconBox.append(entryRowIcon);
+                iconBox.append(findIconButton);
+
+                // command editor
+                const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '', hexpand: true });
                 entryRowCommand.connect('notify::text', () => {
                     item.command = entryRowCommand.text;
                 });
+                const chooseAppButton = new Gtk.Button({
+                    label: _('Choose App...'),
+                    halign: Gtk.Align.END,
+                    margin_bottom: 5,
+                    margin_top: 5,
+                    margin_start: 8,
+                    margin_end: 8,
+                });
+                chooseAppButton.connect('clicked', () => {
+                    const dialog = new CmdChooser(this.get_root(), (cli) => {
+                        if (cli) {
+                            entryRowCommand.set_text(cli);
+                            item.command = cli;
+                        }
+                    });
+                    dialog.present();
+                });
+                commandBox.append(entryRowCommand);
+                commandBox.append(chooseAppButton);
 
                 row.add_row(entryRowTitle);
-                row.add_row(entryRowIcon);
-                row.add_row(entryRowCommand);
+                row.add_row(iconBox);
+                row.add_row(commandBox);
             }
 
             // menu button (add/delete)

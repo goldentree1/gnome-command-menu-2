@@ -14,6 +14,33 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     this._menuEditorPages = [];
     this._menus = [];
 
+    this._loadConfig();
+
+    const generalPage = new GeneralPreferencesPage({
+      title: gettext('General'),
+      icon_name: 'preferences-system-symbolic',
+      menus: this._menus,
+      settings: this._window._settings,
+      addMenu: (page, template = null) => this._addMenu(page, template),
+      removeMenu: (page, idx) => this._removeMenu(page, idx),
+      moveMenu: (page, from, to) => this._moveMenu(page, from, to),
+      showMenuEditor: (idx) => this._window.set_visible_page(this._menuEditorPages[idx]),
+      refreshConfig: (page) => {
+        const ogMenus = [...this._menus];
+        this._menus = [];
+        this._loadConfig();
+        page.updateMenus();
+        this._refreshExtension();
+        this._refreshMenuEditorPages();
+      }
+    });
+
+    this._window.add(generalPage);
+    if (this._menus.length) this._refreshMenuEditorPages();
+    this._window.set_visible_page(generalPage);
+  }
+
+  _loadConfig() {
     const filePath = ".commands.json";
     const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
 
@@ -41,21 +68,6 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       // couldnt parse config - show error dialog
       this._showConfigErrorDialog();
     }
-
-    const generalPage = new GeneralPreferencesPage({
-      title: gettext('General'),
-      icon_name: 'preferences-system-symbolic',
-      menus: this._menus,
-      settings: this._window._settings,
-      addMenu: (page, template = null) => this._addMenu(page, template),
-      removeMenu: (page, idx) => this._removeMenu(page, idx),
-      moveMenu: (page, from, to) => this._moveMenu(page, from, to),
-      showMenuEditor: (idx) => this._window.set_visible_page(this._menuEditorPages[idx]),
-    });
-
-    this._window.add(generalPage);
-    if (this._menus.length) this._refreshMenuEditorPages();
-    this._window.set_visible_page(generalPage);
   }
 
   _addMenu(generalPage, template = null) {

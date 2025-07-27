@@ -21,13 +21,11 @@ const CommandMenuPopup = GObject.registerClass(
     loadIcon(icon, style_class) {
       if (typeof icon !== 'string' || !icon.length) return null;
       // sys icon
-      if (!(icon.includes('/') || icon.includes('.')))
+      if (!icon.includes('/'))
         return new St.Icon({ icon_name: icon, style_class });
       // filepath icon
       if (icon.startsWith('~/') || icon.startsWith("$HOME/"))
         icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
-      if (!icon.startsWith('/'))
-        icon = GLib.build_filenamev([GLib.get_home_dir(), icon]);
       const file = Gio.File.new_for_path(icon);
       if (!file.query_exists(null)) return new St.Icon({ style_class });
       const gicon = new Gio.FileIcon({ file });

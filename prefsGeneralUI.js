@@ -14,7 +14,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
   }
 
   _init(params = {}) {
-    const { menus, addMenu, removeMenu, showMenuEditor, moveMenu, settings, ...args } = params;
+    const { menus, addMenu, removeMenu, showMenuEditor, moveMenu, refreshConfig, settings, ...args } = params;
     super._init(args);
 
     this._menus = menus;
@@ -22,7 +22,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     this._showMenuEditor = showMenuEditor;
     this._moveMenu = moveMenu;
 
-    // about / manual editor section
+    // description / edit manually section
     const group = new Adw.PreferencesGroup();
     const descriptionBox = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
@@ -45,9 +45,18 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       const uri = GLib.filename_to_uri(path, null);
       Gio.AppInfo.launch_default_for_uri(uri, null);
     });
-    // TODO add refresh btn
+    const editManuallyBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+      halign: Gtk.Align.START,
+    });
+    editManuallyBox.append(editConfigButton);
+    const refreshConfigBtn = new Gtk.Button({ icon_name: 'view-refresh-symbolic' });
+    refreshConfigBtn.set_tooltip_text(gettext("Refresh from configuration file"));
+    refreshConfigBtn.connect('clicked', () => refreshConfig(this));
+    editManuallyBox.append(refreshConfigBtn);
     group.add(descriptionBox);
-    group.add(editConfigButton);
+    group.add(editManuallyBox);
 
     // 'your menus' section
     const group2 = new Adw.PreferencesGroup();
@@ -93,6 +102,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     group2.add(this._listBox);
 
     // templates selector section
+    const group3 = new Adw.PreferencesGroup({ title: gettext("Templates:") });
     const templates = [
       {
         name: "Simple Apps Menu",
@@ -120,14 +130,12 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         sourceFile: "examples/systemmenu.json"
       },
     ];
-    const group3 = new Adw.PreferencesGroup({ title: gettext("Templates:") });
     const templatesFlowBox = new Gtk.FlowBox({
       selection_mode: Gtk.SelectionMode.NONE,
       row_spacing: 6,
     });
     for (let template of templates) {
       const templateInfoBox = new Gtk.Box({ spacing: 12 });
-
       const extensionObject = ExtensionPreferences.lookupByURL(import.meta.url);
       const imagePath = extensionObject.metadata.dir
         .get_child(template.image)
@@ -240,7 +248,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       leftBox.set_hexpand(true);
       leftBox.set_halign(Gtk.Align.START);
       leftBox.set_valign(Gtk.Align.CENTER);
-      // put in pill box so white is visible (gnome top bar usually dark)
+      // put in pill box with grey-ish colour so can be seen in light or dark themes
       const pillBox = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
         spacing: 6,
