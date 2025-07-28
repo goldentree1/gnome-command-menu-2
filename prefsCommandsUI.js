@@ -95,7 +95,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
             menu.icon = entry.get_text() || undefined;
         });
         const findIconButton = new Gtk.Button({
-            label: _('Choose Icon...'),
+            label: _('Icons...'),
             halign: Gtk.Align.END,
             margin_bottom: 5,
             margin_top: 5,
@@ -345,6 +345,22 @@ export default class CommandsUI extends Adw.PreferencesPage {
             row._item = item;
             row._depth = depth;
 
+            let iconWidget = null;
+            if (item.type !== 'separator' && item.type !== 'label') {
+                iconWidget = new Gtk.Image({ visible: Boolean(item.icon) });
+                iconWidget.add_css_class('dim-label');
+                row._iconWidget = iconWidget;
+                let icon = item.icon || '';
+                if (icon?.startsWith('~/') || icon.startsWith('$HOME/'))
+                    icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+                if (item.icon?.includes('/')) {
+                    row._iconWidget.set_from_file(icon);
+                } else if (item.icon) {
+                    row._iconWidget.set_from_icon_name(icon);
+                }
+            }
+
+
             if (item.type === 'separator') {
                 row.set_title(`<b>${_('Separator')}</b>`);
             } else if (item.type === 'label') {
@@ -364,13 +380,47 @@ export default class CommandsUI extends Adw.PreferencesPage {
                     item.title = entryRowTitle.text;
                     row.set_title(`<b>Submenu:</b> ${item.title || ''}`);
                 });
-                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '' });
+
+                // icon editor
+                const iconBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '', hexpand: true });
                 entryRowIcon.connect('notify::text', () => {
                     item.icon = entryRowIcon.text;
+                    let icon = item.icon;
+                    row._iconWidget.visible = Boolean(icon);
+                    if (!icon) {
+                        row._iconWidget.clear();
+                    } else if (icon.startsWith('~/') || icon.startsWith('$HOME/'))
+                        icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+                    if (icon.includes('/')) {
+                        row._iconWidget.set_from_file(icon);
+                    } else {
+                        row._iconWidget.set_from_icon_name(icon);
+                    }
                 });
 
+                const findIconButton = new Gtk.Button({
+                    label: _('Icons...'),
+                    halign: Gtk.Align.END,
+                    margin_bottom: 5,
+                    margin_top: 5,
+                    margin_start: 8,
+                    margin_end: 8,
+                });
+                findIconButton.connect('clicked', () => {
+                    const dialog = new IconChooser(this.get_root(), (_ico) => {
+                        if (_ico) {
+                            const icon = _ico || "";
+                            entryRowIcon.set_text(icon);
+                        }
+                    });
+                    dialog.present();
+                });
+                iconBox.append(entryRowIcon);
+                iconBox.append(findIconButton);
+
                 row.add_row(entryRowTitle);
-                row.add_row(entryRowIcon);
+                row.add_row(iconBox);
             } else if (item.command) {
                 row.set_title(item.title || _('Untitled'));
 
@@ -384,9 +434,20 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '', hexpand: true });
                 entryRowIcon.connect('notify::text', () => {
                     item.icon = entryRowIcon.text;
+                    let icon = item.icon;
+                    row._iconWidget.visible = Boolean(icon);
+                    if (!icon) {
+                        row._iconWidget.clear();
+                    } else if (icon.startsWith('~/') || icon.startsWith('$HOME/'))
+                        icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+                    if (icon.includes('/')) {
+                        row._iconWidget.set_from_file(icon);
+                    } else {
+                        row._iconWidget.set_from_icon_name(icon);
+                    }
                 });
                 const findIconButton = new Gtk.Button({
-                    label: _('Choose Icon...'),
+                    label: _('Icons...'),
                     halign: Gtk.Align.END,
                     margin_bottom: 5,
                     margin_top: 5,
@@ -398,7 +459,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
                         if (_ico) {
                             const icon = _ico || "";
                             entryRowIcon.set_text(icon);
-                            item.icon = icon;
                         }
                     });
                     dialog.present();
@@ -413,7 +473,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                     item.command = entryRowCommand.text;
                 });
                 const chooseAppButton = new Gtk.Button({
-                    label: _('Choose App...'),
+                    label: _('Apps...'),
                     halign: Gtk.Align.END,
                     margin_bottom: 5,
                     margin_top: 5,
@@ -517,17 +577,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 drag.set_hotspot(0, 0);
             });
 
-            if (item.icon) {
-                let iconWidget;
-                if (item.icon.includes('/') || item.icon.includes('.')) {
-                    iconWidget = Gtk.Image.new_from_file(item.icon);
-                } else {
-                    iconWidget = Gtk.Image.new_from_icon_name(item.icon);
-                }
-                iconWidget.add_css_class('dim-label');
-                row.add_prefix(iconWidget);
-            }
-
+            if (iconWidget) row.add_prefix(iconWidget);
             listBox.append(row);
 
             if (item.type === "submenu") {

@@ -27,7 +27,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     const descriptionBox = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
       spacing: 6,
-      margin_top: 20,
+      margin_top: 3,
       margin_bottom: 15,
     });
     const description = new Gtk.Label({
@@ -231,17 +231,16 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         use_markup: true
       });
 
-      let iconWidget;
       let icon = menu.icon || '';
-      if (icon.includes('/') || icon.includes('.')) {
-        if (icon.startsWith('~/') || icon.startsWith('$HOME/')) {
-          icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
-        }
-        iconWidget = Gtk.Image.new_from_file(icon);
-      } else {
-        iconWidget = Gtk.Image.new_from_icon_name(icon);
-      }
+      let iconWidget = new Gtk.Image();
       iconWidget.add_css_class('dim-label');
+      if (icon?.startsWith('~/') || icon.startsWith('$HOME/'))
+        icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+      if (icon?.includes('/')) {
+        iconWidget.set_from_file(icon || "");
+      } else {
+        iconWidget.set_from_icon_name(icon || "");
+      }
 
       const labelEnd = new Gtk.Label({ label: menu.title || '', });
       const leftBox = new Gtk.Box({ spacing: 6 });
@@ -275,7 +274,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         cssProvider,
         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
       );
-      pillBox.append(iconWidget);
+      if (icon) pillBox.append(iconWidget);
       pillBox.append(labelEnd);
       leftBox.append(menuLabel);
       leftBox.append(pillBox);

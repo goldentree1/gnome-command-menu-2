@@ -14,7 +14,7 @@ export default class IconChooser extends Gtk.Dialog {
             transient_for: parent,
             modal: true,
             title: 'Choose Icon',
-            default_width: 800,
+            default_width: 600,
             default_height: 500,
         });
 

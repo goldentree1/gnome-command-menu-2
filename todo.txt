@@ -20,3 +20,31 @@ Todo:
  - Apply prefs changes instantly via gsettings
  - New menu item: TOGGLE (+ monitor cmd? When menu is opened, run that cmd if it exists to check if should be on or off state)
  - New menu item: Dynamic (a 'generate' cmd or something along with normal cmd. 'generate' will )
+
+Features:
+
+prefs.js:
+X icon selector looks stupid (make lists narrower - similar to button)
+X refresh button doesnt reload menus in general page (keeps deleted menus after refresh - multiple bugs stem from this!)
+X 'Simple Apps Menu' should have an icon (shows up as no icon, bad look) 
+X icons arent loaded when selected (at least make Choose Icon... load the icon)
+X submenu doesnt have icon selector
+X bugfix bad symbolic name icons on GeneralPrefsPage + commandsui
+- symbolic icons anchor link in Icon Chooser... or somewhere?
+- 'Cancel Changes'... perhaps a wee re-design of prefs.js so that ogMenus is stored and more functional / better code refactor - less duplication, better use of updating menus
+- can we widen the stupid adw window drag/drop box?
+- customize .commands.json path!!! (default to extension dir?)
+- COMPLETE templates (description)
+- Command EDITOR - like not just run app dialog (change to ... icon) - multichoice menu item - 'Run App', "Open File/Folder with App...", "Custom Command"?
+
+extension.js:
+- cache filepath icons?
+- is ~/.commands.json bad path (ext review)?
+- on failed parse: logError(e, this.uuid + ': Failed to load commands.json');
+- better reload (dont enable/disable - might not pass review):
+    reloadExtension() {
+      this.cmdMenus.forEach(m => m.destroy());
+      this.cmdMenus = [];
+      this.enable(); // just rebuild menus, no full disable/enable cycle
+    }
+- fix padding issues with icon+text (also - show MISSING icon symbol when  )

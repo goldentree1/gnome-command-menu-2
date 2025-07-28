@@ -8,7 +8,7 @@ import GeneralPreferencesPage from './prefsGeneralUI.js';
 export default class CommandMenuExtensionPreferences extends ExtensionPreferences {
 
   fillPreferencesWindow(window) {
-    window.set_default_size(800, 850);
+    window.set_default_size(800, 900);
     window._settings = this.getSettings();
     this._window = window;
     this._menuEditorPages = [];
@@ -27,7 +27,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       showMenuEditor: (idx) => this._window.set_visible_page(this._menuEditorPages[idx]),
       refreshConfig: (page) => {
         const ogMenus = [...this._menus];
-        this._menus = [];
+        while (this._menus.length) this._menus.pop();
         this._loadConfig();
         page.updateMenus();
         this._refreshExtension();
