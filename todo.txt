@@ -4,24 +4,16 @@ Done:
  - Custom filepath icons
  - Change menu position (left/right/center) and indexing
  - Allow multiple menus!
+ - Menu editor GUI (a bit rough yet but fully-functional)
+ - Menu templates
 
-Roughly done:
- - GUI for .commands.json
-
-Todo:
- - Make .commands.json path changeable
+Potential Features:
  - Nested submenus
- - Make Menu editor GUI better:
-    - Icons selector (basic general icons on most systems, provide link to more, and provide 'Browse Files...' button for personal icons)
-    - Run App, Open File, OR Custom Command (current default) options for command editor??? 
-      Would be nice to at least let the user see that its running ONLY a program (e.g., 'firefox' has no CLI args, so it could probably be considered just launching a program? 'nautilus xxx' is Open Dir, file is 'open xxx'?, otherwise custom command?)
-    - Refresh button next to 'Edit manually'.
-    - Apply Changes... remove and apply instantly? (use gsettings instead?)
  - Apply prefs changes instantly via gsettings
  - New menu item: TOGGLE (+ monitor cmd? When menu is opened, run that cmd if it exists to check if should be on or off state)
  - New menu item: Dynamic (a 'generate' cmd or something along with normal cmd. 'generate' will )
 
-Features:
+TODO:
 
 prefs.js:
 X icon selector looks stupid (make lists narrower - similar to button)
@@ -30,6 +22,8 @@ X 'Simple Apps Menu' should have an icon (shows up as no icon, bad look)
 X icons arent loaded when selected (at least make Choose Icon... load the icon)
 X submenu doesnt have icon selector
 X bugfix bad symbolic name icons on GeneralPrefsPage + commandsui
+- dont allow nested submenus in prefs menu currently (its not part of gnome...) :'-(
+- drag near edge scrolls window of commands gui? or no scroll on it? 
 - symbolic icons anchor link in Icon Chooser... or somewhere?
 - 'Cancel Changes'... perhaps a wee re-design of prefs.js so that ogMenus is stored and more functional / better code refactor - less duplication, better use of updating menus
 - can we widen the stupid adw window drag/drop box?
@@ -38,8 +32,8 @@ X bugfix bad symbolic name icons on GeneralPrefsPage + commandsui
 - Command EDITOR - like not just run app dialog (change to ... icon) - multichoice menu item - 'Run App', "Open File/Folder with App...", "Custom Command"?
 
 extension.js:
-- cache filepath icons?
-- is ~/.commands.json bad path (ext review)?
+- ~/.commands.json changeable via gsettings
+- fix padding issues with icon+text (also - show MISSING icon symbol when  )
 - on failed parse: logError(e, this.uuid + ': Failed to load commands.json');
 - better reload (dont enable/disable - might not pass review):
     reloadExtension() {
@@ -47,4 +41,8 @@ extension.js:
       this.cmdMenus = [];
       this.enable(); // just rebuild menus, no full disable/enable cycle
     }
-- fix padding issues with icon+text (also - show MISSING icon symbol when  )
+- cache filepath icons?
+
+metadata.json:
+- make sure works with gnome stds - dev guide extensions.gnome.org
+- test GNOME 45 to try add to metadata?? more 46+47 as well 
