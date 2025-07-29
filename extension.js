@@ -145,8 +145,9 @@ export default class CommandMenuExtension extends Extension {
     this._settings = this.getSettings();
 
     // load cmds
-    const filePath = ".commands.json";
-    const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
+    let filePath = this._settings.get_string('config-filepath');
+    if (filePath.startsWith('~/')) filePath = GLib.build_filenamev([GLib.get_home_dir(), filePath.substring(2)]);
+    const file = Gio.file_new_for_path(filePath);
     const menus = [];
     try {
       let [ok, contents, _] = file.load_contents(null);
@@ -173,6 +174,9 @@ export default class CommandMenuExtension extends Extension {
 
     // reload as required
     this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
+      this.reloadExtension();
+    }));
+    this._settingsIds.push(this._settings.connect('changed::config-filepath', () => {
       this.reloadExtension();
     }));
 

@@ -6,5 +6,10 @@
 			<summary>Restart Counter</summary>
 			<description>Restart Counter</description>
 		</key>
+		<key name="config-filepath" type="s">
+			<default>'~/.commands.json'</default>
+			<summary>Configuration File Path</summary>
+			<description>Path to the configuration file</description>
+		</key>
 	</schema>
 </schemalist>

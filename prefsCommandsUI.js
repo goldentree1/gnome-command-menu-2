@@ -30,6 +30,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         super._init(args);
         this.menuIdx = menuIdx;
         this.menus = menus;
+        this._settings = settings;
         const menu = this.menus[this.menuIdx];
 
         const style = new Gtk.CssProvider();
@@ -58,7 +59,8 @@ export default class CommandsUI extends Adw.PreferencesPage {
             menu.menu = this._listBoxToMenu();
             try {
                 const json = JSON.stringify(this.menus, null, 2);
-                const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+                let filePath = this._settings.get_string('config-filepath');
+                if (filePath.startsWith('~/')) filePath = GLib.build_filenamev([GLib.get_home_dir(), filePath.substring(2)]);
                 GLib.file_set_contents(filePath, json);
                 settings.set_int('restart-counter', settings.get_int('restart-counter') + 1);
             } catch (e) {
@@ -663,10 +665,19 @@ export default class CommandsUI extends Adw.PreferencesPage {
         for (const row of moveThese) this.commandsListBox.remove(row);
 
         let insertIndex = targetIndex > fromIndex ? targetIndex - moveThese.length : targetIndex;
-        const baseDepth = draggedRow._depth;
+        let baseDepth = draggedRow._depth;
+
+        // if dragging submenu onto another submenu, walk to top of submenu: insert there
+        // because nested submenus are not supported by GNOME-shell :-(
+        if (draggedRow._item.type === 'submenu') // comment this block out for nested submenus
+            while (insertIndex && rows[insertIndex]._depth) insertIndex--;
+
         for (const row of moveThese) {
-            const relative = row._depth - baseDepth;
-            row._depth = targetRow._depth + relative;
+            // comment if statement out for nested submenus
+            if (draggedRow._item.type !== 'submenu') {
+                const relative = row._depth - baseDepth;
+                row._depth = targetRow._depth + relative;
+            }
             row.set_margin_start(row._depth * 24);
             this.commandsListBox.insert(row, insertIndex++);
         }

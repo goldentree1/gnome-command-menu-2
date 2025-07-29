@@ -9,7 +9,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
 
   fillPreferencesWindow(window) {
     window.set_default_size(750, 850);
-    window._settings = this.getSettings();
+    this._settings = this.getSettings();
     this._window = window;
     this._menuEditorPages = [];
     this._menus = [];
@@ -20,7 +20,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       title: gettext('General'),
       icon_name: 'preferences-system-symbolic',
       menus: this._menus,
-      settings: this._window._settings,
+      settings: this._settings,
       addMenu: (template = null) => {
         this._mutateMenus((m) => {
           const addMe = template || {
@@ -61,15 +61,16 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
   }
 
   _loadConfig() {
-    const filePath = ".commands.json";
-    const file = Gio.file_new_for_path(GLib.get_home_dir() + "/" + filePath);
+    let filePath = this._settings.get_string('config-filepath');
+    if (filePath.startsWith('~/')) filePath = GLib.build_filenamev([GLib.get_home_dir(), filePath.substring(2)]);
+    const file = Gio.file_new_for_path(filePath);
 
     // create default config if doesnt exist
     if (!file.query_exists(null)) {
       try {
         GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]));
       } catch (err) {
-        logError(err, 'Failed to create new default .commands.json file');
+        logError(err, 'Failed to create default configuration file');
       }
     }
 
@@ -101,7 +102,9 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     if (saveToConfig) {
       try {
         const json = JSON.stringify(this._menus, null, 2);
-        const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+        let filePath = this._settings.get_string('config-filepath');
+        if (filePath.startsWith('~/'))
+          filePath = GLib.build_filenamev([GLib.get_home_dir(), filePath.substring(2)]);
         GLib.file_set_contents(filePath, json);
       } catch (err) {
         logError(err.uuid, 'failed to save menus to configuration file', err);
@@ -116,8 +119,8 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
   }
 
   _refreshExtension() {
-    let rc = this._window._settings.get_int('restart-counter');
-    this._window._settings.set_int('restart-counter', rc + 1);
+    let rc = this._settings.get_int('restart-counter');
+    this._settings.set_int('restart-counter', rc + 1);
   }
 
   _refreshMenuEditorPages() {
@@ -127,7 +130,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       icon_name: 'document-edit-symbolic',
       menus: this._menus,
       menuIdx: i,
-      settings: this._window._settings,
+      settings: this._settings,
     }));
     for (const p of this._menuEditorPages) this._window.add(p);
   }
@@ -139,18 +142,18 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       buttons: Gtk.ButtonsType.YES_NO,
       message_type: Gtk.MessageType.ERROR,
       text: gettext("Configuration error!"),
-      secondary_text: gettext("Your configuration could not be parsed from ~/.commands.json. Would you like to reset configuration?")
+      secondary_text: gettext(`Your configuration could not be parsed from '${this._settings.get_string('config-filepath')}'. Would you like to reset configuration?`)
     });
     dialog.connect('response', (d, response) => {
       if (response === Gtk.ResponseType.YES) {
         try {
-          const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+          const filePath = this._settings.get_string('config-filepath');
           GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
           d.destroy();
-          this._refreshExtension();
+          this._refreshExtension(); // TODO fix this its rubbish logic
           imports.system.exit(0); // triggers reload if extension restarts with prefs
         } catch (err) {
-          logError(err, 'Failed to reset ~/commands.json');
+          logError(err, `Failed to reset configuration file at "${this._settings.get_string('config-filepath')}".`);
           imports.system.exit(1);
         }
       }
