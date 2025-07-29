@@ -8,7 +8,7 @@ import GeneralPreferencesPage from './prefsGeneralUI.js';
 export default class CommandMenuExtensionPreferences extends ExtensionPreferences {
 
   fillPreferencesWindow(window) {
-    window.set_default_size(800, 900);
+    window.set_default_size(750, 850);
     window._settings = this.getSettings();
     this._window = window;
     this._menuEditorPages = [];
@@ -16,28 +16,48 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
 
     this._loadConfig();
 
-    const generalPage = new GeneralPreferencesPage({
+    this.generalPage = new GeneralPreferencesPage({
       title: gettext('General'),
       icon_name: 'preferences-system-symbolic',
       menus: this._menus,
       settings: this._window._settings,
-      addMenu: (page, template = null) => this._addMenu(page, template),
-      removeMenu: (page, idx) => this._removeMenu(page, idx),
-      moveMenu: (page, from, to) => this._moveMenu(page, from, to),
-      showMenuEditor: (idx) => this._window.set_visible_page(this._menuEditorPages[idx]),
-      refreshConfig: (page) => {
-        const ogMenus = [...this._menus];
-        while (this._menus.length) this._menus.pop();
-        this._loadConfig();
-        page.updateMenus();
-        this._refreshExtension();
-        this._refreshMenuEditorPages();
+      addMenu: (template = null) => {
+        this._mutateMenus((m) => {
+          const addMe = template || {
+            menu: [],
+            title: `Menu ${m.length + 1}`,
+            icon: 'utilities-terminal',
+            position: 'left'
+          };
+          m.push(addMe);
+        });
+      },
+      removeMenu: (rmIdx) => {
+        this._mutateMenus((m) => {
+          m.splice(rmIdx, 1);
+        })
+      },
+      moveMenu: (from, to) => {
+        this._mutateMenus((m) => {
+          const temp = m[from];
+          m[from] = m[to];
+          m[to] = temp;
+        })
+      },
+      showMenuEditor: (idx) => {
+        this._window.set_visible_page(this._menuEditorPages[idx])
+      },
+      refreshConfig: () => {
+        this._mutateMenus((m) => {
+          while (m.length) m.pop();
+          this._loadConfig();
+        }, false);
       }
     });
 
-    this._window.add(generalPage);
+    this._window.add(this.generalPage);
     if (this._menus.length) this._refreshMenuEditorPages();
-    this._window.set_visible_page(generalPage);
+    this._window.set_visible_page(this.generalPage);
   }
 
   _loadConfig() {
@@ -70,68 +90,28 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     }
   }
 
-  _addMenu(generalPage, template = null) {
+  _mutateMenus(mutateFn, saveToConfig = true) {
     const ogMenus = [...this._menus];
-    const addMe = template || {
-      menu: [],
-      title: `Menu ${this._menus.length + 1}`,
-      icon: 'utilities-terminal',
-      position: 'left'
-    };
-    this._menus.push(addMe);
-    try {
-      const json = JSON.stringify(this._menus, null, 2);
-      const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-      GLib.file_set_contents(filePath, json);
-      generalPage.updateMenus();
-      this._refreshMenuEditorPages();
-      this._refreshExtension();
-      this._window.set_visible_page(generalPage);
-    } catch (e) { // revert on fail
-      logError(e, 'Failed to add menu');
-      this._menus = ogMenus;
-      generalPage.updateMenus();
-      this._refreshMenuEditorPages();
-    }
-  }
+    mutateFn(this._menus);
+    this.generalPage.updateMenus();
+    this._refreshMenuEditorPages();
+    this._refreshExtension();
+    this._window.set_visible_page(this.generalPage);
 
-  _removeMenu(generalPage, rmIdx) {
-    const ogMenus = [...this._menus];
-    // remove menu and save
-    this._menus.splice(rmIdx, 1);
-    try {
-      generalPage.updateMenus();
-      this._refreshMenuEditorPages();
-      const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-      GLib.file_set_contents(targetPath, JSON.stringify(this._menus, null, 2));
-      this._refreshExtension();
-      this._window.set_visible_page(generalPage);
-    } catch (err) { // revert on fail
-      logError(e, 'Failed to remove menu');
-      this._menus = ogMenus;
-      generalPage.updateMenus();
-      this._refreshMenuEditorPages();
-    }
-  }
-
-  _moveMenu(generalPage, from, to) {
-    const ogMenus = [...this._menus];
-    // try swap
-    const temp = this._menus[from];
-    this._menus[from] = this._menus[to];
-    this._menus[to] = temp;
-    try {
-      generalPage.updateMenus();
-      this._refreshMenuEditorPages();
-      const targetPath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-      GLib.file_set_contents(targetPath, JSON.stringify(this._menus, null, 2));
-      this._refreshExtension();
-      this._window.set_visible_page(generalPage);
-    } catch (err) { // revert on fail
-      logError(err, 'Failed to move menu');
-      this._menus = ogMenus;
-      generalPage.updateMenus();
-      this._refreshMenuEditorPages();
+    if (saveToConfig) {
+      try {
+        const json = JSON.stringify(this._menus, null, 2);
+        const filePath = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
+        GLib.file_set_contents(filePath, json);
+      } catch (err) {
+        logError(err.uuid, 'failed to save menus to configuration file', err);
+        // TODO error popup dialog? check logError ok too ^^
+        this._menus = ogMenus;
+        this.generalPage.updateMenus();
+        this._refreshExtension();
+        this._refreshMenuEditorPages();
+        this._window.set_visible_page(this.generalPage);
+      }
     }
   }
 

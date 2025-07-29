@@ -22,8 +22,11 @@ X 'Simple Apps Menu' should have an icon (shows up as no icon, bad look)
 X icons arent loaded when selected (at least make Choose Icon... load the icon)
 X submenu doesnt have icon selector
 X bugfix bad symbolic name icons on GeneralPrefsPage + commandsui
+X launch default TEXT editor for 'Edit Config Manually' - not default app (defaults to firefox on ubuntu)
+X clean add/remove/move menus code
 - dont allow nested submenus in prefs menu currently (its not part of gnome...) :'-(
 - drag near edge scrolls window of commands gui? or no scroll on it? 
+- more complete icon set in Icon Chooser
 - symbolic icons anchor link in Icon Chooser... or somewhere?
 - 'Cancel Changes'... perhaps a wee re-design of prefs.js so that ogMenus is stored and more functional / better code refactor - less duplication, better use of updating menus
 - can we widen the stupid adw window drag/drop box?

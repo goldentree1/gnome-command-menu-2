@@ -14,13 +14,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
   }
 
   _init(params = {}) {
-    const { menus, addMenu, removeMenu, showMenuEditor, moveMenu, refreshConfig, settings, ...args } = params;
+    const { menus, addMenu, removeMenu, moveMenu, showMenuEditor, refreshConfig, settings, ...args } = params;
     super._init(args);
 
     this._menus = menus;
     this._removeMenu = removeMenu;
-    this._showMenuEditor = showMenuEditor;
     this._moveMenu = moveMenu;
+    this._showMenuEditor = showMenuEditor;
 
     // description / edit manually section
     const group = new Adw.PreferencesGroup();
@@ -42,8 +42,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     });
     editConfigButton.connect("clicked", () => {
       const path = GLib.build_filenamev([GLib.get_home_dir(), '.commands.json']);
-      const uri = GLib.filename_to_uri(path, null);
-      Gio.AppInfo.launch_default_for_uri(uri, null);
+      const file = Gio.File.new_for_path(path);
+      const defaultTextApp = Gio.AppInfo.get_default_for_type('text/plain', false);
+      if (defaultTextApp) {
+        defaultTextApp.launch([file], null);
+      } else {
+        Gio.AppInfo.launch_default_for_uri(file.get_uri(), null);
+      }
     });
     const editManuallyBox = new Gtk.Box({
       orientation: Gtk.Orientation.HORIZONTAL,
@@ -88,7 +93,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     buttonBox.append(label);
     addMenuButton.set_child(buttonBox);
     addMenuButton.set_tooltip_text(gettext("Create a new empty menu"));
-    addMenuButton.connect("clicked", () => { addMenu(this); });
+    addMenuButton.connect("clicked", () => { addMenu(); });
     const spacer = new Gtk.Box({ hexpand: true });
     headerRow.append(titleLabel);
     headerRow.append(spacer);
@@ -185,7 +190,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
             const contents = GLib.file_get_contents(templatePath)[1];
             const decoder = new TextDecoder();
             const json = JSON.parse(decoder.decode(contents));
-            addMenu(this, json);
+            addMenu(json);
           }
           d.destroy();
         });
@@ -324,7 +329,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
           text: `Are you sure you want to remove 'Menu ${i + 1}'?`,
         });
         dialog.connect("response", (d, res) => {
-          if (res === Gtk.ResponseType.OK) this._removeMenu(this, i);
+          if (res === Gtk.ResponseType.OK) this._removeMenu(i);
           d.destroy();
         });
         dialog.show();
@@ -333,13 +338,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
       const upAction = new Gio.SimpleAction({ name: 'up' });
       upAction.connect('activate', () => {
-        if (i > 0) this._moveMenu(this, i - 1, i);
+        if (i > 0) this._moveMenu(i - 1, i);
       });
       actionGroup.add_action(upAction);
 
       const downAction = new Gio.SimpleAction({ name: 'down' });
       downAction.connect('activate', () => {
-        if (i < this._menus.length - 1) this._moveMenu(this, i + 1, i);
+        if (i < this._menus.length - 1) this._moveMenu(i + 1, i);
       });
       actionGroup.add_action(downAction);
 
