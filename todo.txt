@@ -26,9 +26,8 @@ X launch default TEXT editor for 'Edit Config Manually' - not default app (defau
 X clean add/remove/move menus code
 X customize .commands.json path!!! (default to extension dir?)
 X dont allow nested submenus in prefs menu currently (its not part of gnome...) :'-(
-- more complete icon set in Icon Chooser
-- Icon Chooser - make the current icon selected (if exists on list, else dont select anything)
-- symbolic icons anchor link in Icon Chooser... or somewhere?
+X more complete icon set in Icon Chooser
+X link to more symbolic icons in Icon Chooser
 - COMPLETE templates (description)
 
 extension.js:

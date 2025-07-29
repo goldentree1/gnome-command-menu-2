@@ -29,7 +29,6 @@ export default class IconChooser extends Gtk.Dialog {
 
         const sysScroller = new Gtk.ScrolledWindow({
             vexpand: true,
-            hexpand: true,
             min_content_height: 400,
         });
 
@@ -41,9 +40,22 @@ export default class IconChooser extends Gtk.Dialog {
             'preferences-system-symbolic',
             'preferences-other',
             'folder',
+            'folder-documents-symbolic',
+            'folder-download-symbolic',
+            'folder-music-symbolic',
+            'folder-pictures-symbolic',
+            'folder-videos-symbolic',
             'applications-system',
+            'applications-accessories-symbolic',
+            'applications-utilities-symbolic',
             'document-open',
+            'document-save-symbolic',
+            'edit-copy-symbolic',
+            'edit-paste-symbolic',
             'system-run',
+            'system-search-symbolic',
+            'view-refresh-symbolic',
+            'help-about-symbolic',
         ];
         const systemBox = new Gtk.ListBox({
             selection_mode: Gtk.SelectionMode.SINGLE,
@@ -66,7 +78,6 @@ export default class IconChooser extends Gtk.Dialog {
         // app icons (from user-installed programs)
         const appScroller = new Gtk.ScrolledWindow({
             vexpand: true,
-            hexpand: true,
             min_content_height: 400,
         });
         const apps = Gio.AppInfo.get_all().filter(a => a.should_show() && a.get_icon());
@@ -91,10 +102,10 @@ export default class IconChooser extends Gtk.Dialog {
 
         // user-selected icon path
         const browseBox = new Gtk.Box({
-            // orientation: Gtk.Orientation.VERTICAL,
             spacing: 18,
             halign: Gtk.Align.CENTER,
-            valign: Gtk.Align.CENTER
+            valign: Gtk.Align.CENTER,
+            orientation: Gtk.Orientation.VERTICAL,
         });
         const browseBtn = new Gtk.Button({ label: 'Browse Files…' });
         browseBtn.connect('clicked', () => {
@@ -115,6 +126,12 @@ export default class IconChooser extends Gtk.Dialog {
             fileChooser.show();
         });
         browseBox.append(browseBtn);
+
+        const linkButton = new Gtk.LinkButton({
+            label: 'GNOME 48 Icons List',
+            uri: 'https://github.com/StorageB/icons/blob/main/GNOME48Adwaita/icons.md', // Replace with your desired link
+        });
+        browseBox.append(linkButton)
 
         // listeners
         systemBox.connect('row-activated', (_, row) => {
