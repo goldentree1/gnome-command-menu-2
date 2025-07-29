@@ -23,25 +23,17 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     this._showMenuEditor = showMenuEditor;
     this._settings = settings;
 
-    // description / edit manually section
-    const group = new Adw.PreferencesGroup();
-    const descriptionBox = new Gtk.Box({
-      orientation: Gtk.Orientation.VERTICAL,
-      spacing: 6,
-      margin_top: 3,
-      margin_bottom: 15,
-      hexpand: true
-    });
-
-    //description
+    // description section
+    const group0 = new Adw.PreferencesGroup();
     const description = new Gtk.Label({
       label: gettext('Welcome to Command Menu 2! Use this app to create, remove and customize your menus - or try one of our templates.'),
       wrap: true
     });
     description.get_style_context().add_class('dim-label');
-    descriptionBox.append(description);
-    group.add(descriptionBox);
+    group0.add(description);
 
+    // 'Configuration File' section
+    const group = new Adw.PreferencesGroup({ title: gettext("Configuration File:") });
     const editManuallyBox = new Gtk.Box({
       orientation: Gtk.Orientation.HORIZONTAL,
       spacing: 6,
@@ -67,6 +59,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       }
     });
     editManuallyBox.append(editConfigButton);
+
     // refresh btn
     const refreshConfigBtn = new Gtk.Button({ icon_name: 'view-refresh-symbolic', halign: Gtk.Align.START });
     refreshConfigBtn.set_tooltip_text(gettext("Refresh from configuration file"));
@@ -118,25 +111,11 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     group.add(editManuallyBox);
 
-    // 'your menus' section
-    const group2 = new Adw.PreferencesGroup();
-    const headerRow = new Gtk.Box({
-      orientation: Gtk.Orientation.HORIZONTAL,
-      spacing: 6,
-      halign: Gtk.Align.FILL,
-      margin_top: 6,
-      margin_bottom: 12,
-      margin_start: 0,
-      margin_end: 0,
-    });
-    // title on left
-    const titleLabel = new Gtk.Label({ label: gettext("Your Menus:") });
-    titleLabel.set_halign(Gtk.Align.START);
-    titleLabel.set_valign(Gtk.Align.CENTER);
-    titleLabel.get_style_context().add_class('title-3');
-    // button on right
+    // 'Your Menus' section
+    const group2 = new Adw.PreferencesGroup({ title: gettext("Your Menus:") });
     const addMenuButton = new Gtk.Button({
-      halign: Gtk.Align.END,
+      margin_bottom: 5,
+      halign: Gtk.Align.START
     });
     const icon = Gtk.Image.new_from_icon_name('document-new-symbolic');
     const label = new Gtk.Label({ label: gettext("Add Menu") });
@@ -149,19 +128,15 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     addMenuButton.set_child(buttonBox);
     addMenuButton.set_tooltip_text(gettext("Create a new empty menu"));
     addMenuButton.connect("clicked", () => { addMenu(); });
-    const spacer = new Gtk.Box({ hexpand: true });
-    headerRow.append(titleLabel);
-    headerRow.append(spacer);
-    headerRow.append(addMenuButton);
     this._listBox = new Gtk.ListBox({
       selection_mode: Gtk.SelectionMode.NONE,
     });
     this._listBox.add_css_class('boxed-list');
     this.updateMenus();
-    group2.add(headerRow);
+    group2.add(addMenuButton);
     group2.add(this._listBox);
 
-    // templates selector section
+    // 'Templates' section
     const group3 = new Adw.PreferencesGroup({ title: gettext("Templates:") });
     const templates = [
       {
@@ -172,64 +147,63 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       {
         name: "Apple Menu",
         image: "icons/applemenu.jpg",
-        sourceFile: "examples/applemenu.json"
+        sourceFile: "examples/applemenu.json",
+        description: "A menu that does blah-de-blah-de-blah."
       },
       {
         name: "Files Menu",
         image: "icons/filesmenu.jpg",
-        sourceFile: "examples/filesmenu.json"
+        sourceFile: "examples/filesmenu.json",
+        description: "A menu that does blah-de-blah-de-blah."
       },
       {
         name: "Penguin Menu",
         image: "icons/penguinmenu.jpg",
-        sourceFile: "examples/penguinmenu.json"
+        sourceFile: "examples/penguinmenu.json",
+        description: "A menu that does blah-de-blah-de-blah."
       },
       {
         name: "System Menu",
         image: "icons/systemmenu.jpg",
-        sourceFile: "examples/systemmenu.json"
+        sourceFile: "examples/systemmenu.json",
+        description: "A menu that does blah-de-blah-de-blah."
       },
     ];
     const templatesFlowBox = new Gtk.FlowBox({
       selection_mode: Gtk.SelectionMode.NONE,
       row_spacing: 6,
     });
-    for (let template of templates) {
-      const templateInfoBox = new Gtk.Box({ spacing: 12 });
+    for (const template of templates) {
+      const vbox = new Gtk.Box({
+        orientation: Gtk.Orientation.VERTICAL,
+        spacing: 6,
+        margin_bottom: 10
+      });
       const extensionObject = ExtensionPreferences.lookupByURL(import.meta.url);
       const imagePath = extensionObject.metadata.dir
         .get_child(template.image)
         .get_path();
-      let img = Gtk.Image.new_from_file(imagePath);
-      img.set_pixel_size(256);
-      templateInfoBox.append(img);
+      const img = Gtk.Image.new_from_file(imagePath);
+      img.set_pixel_size(200);
+      vbox.append(img);
 
-      const templateTextBox = new Gtk.Box({
-        orientation: Gtk.Orientation.VERTICAL,
-        spacing: 4,
-        halign: Gtk.Align.START,
-        valign: Gtk.Align.CENTER,
-        hexpand: true,
-        margin_start: 10
-      });
-      const templateTitleLabel = new Gtk.Label({
+      const label = new Gtk.Label({
         label: template.name,
-        halign: Gtk.Align.START,
-        css_classes: ['title-4'], // optional: makes it stand out as a title
+        halign: Gtk.Align.CENTER,
       });
-      const templateDescriptionLabel = new Gtk.Label({
-        label: template.description ?? gettext("No description provided."),
-        wrap: true,
-        css_classes: ['dim-label'], // subtler style
-      });
-      templateTextBox.append(templateTitleLabel);
-      templateTextBox.append(templateDescriptionLabel);
-      templateInfoBox.append(templateTextBox);
+      label.add_css_class("heading");
+      vbox.append(label);
 
-      const templateBtn = new Gtk.Button();
-      templateBtn.set_child(templateInfoBox);
-      templateBtn.set_tooltip_text(gettext("Apply this template"));
-      templateBtn.connect("clicked", () => {
+      const caption = new Gtk.Label({
+        wrap: true,
+        label: template.description || 'No description provided.',
+      });
+      caption.add_css_class("caption");
+      vbox.append(caption)
+      const button = new Gtk.Button();
+      button.set_child(vbox);
+      button.set_tooltip_text(gettext("Apply this template"));
+      button.connect("clicked", () => {
         const dialog = new Gtk.MessageDialog({
           modal: true,
           transient_for: this.get_root(),
@@ -251,20 +225,12 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         });
         dialog.show();
       });
-      templatesFlowBox.insert(templateBtn, -1);
+      templatesFlowBox.insert(button, -1);
     }
-
-    const templatesScroll = new Gtk.ScrolledWindow({
-      hscrollbar_policy: Gtk.PolicyType.NEVER,
-      vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
-      hexpand: true,
-      vexpand: true
-    });
-    templatesScroll.set_child(templatesFlowBox);
-    templatesScroll.set_size_request(-1, 330);
-    group3.add(templatesScroll);
+    group3.add(templatesFlowBox);
 
     // add all groups to page
+    this.add(group0);
     this.add(group);
     this.add(group2);
     this.add(group3);
@@ -319,7 +285,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         margin_end: 8,
       });
       const css = `
-  .inline-pill {
+.inline-pill {
     background-color: rgba(0,0,0,0.4);
     color:white;
     border-radius: 5px;
@@ -339,26 +305,6 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       leftBox.append(menuLabel);
       leftBox.append(pillBox);
       row.append(leftBox);
-
-      // edit icon
-      const editIconWidget = Gtk.Image.new_from_icon_name('document-edit-symbolic');
-      const editLabel = new Gtk.Label({ label: gettext('Edit') });
-
-      const editBox = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-        spacing: 6,
-        halign: Gtk.Align.CENTER,
-        valign: Gtk.Align.CENTER,
-      });
-      editBox.append(editIconWidget);
-      editBox.append(editLabel);
-
-      const editButton = new Gtk.Button({ valign: Gtk.Align.CENTER });
-      editButton.set_child(editBox);
-      editButton.set_tooltip_text(gettext(`Go to editor for 'Menu ${i + 1}'`));
-      editButton.connect('clicked', () => this._showMenuEditor(i));
-
-      row.append(editButton);
 
       // 3 dot menu w/ remove, up and down
       const gMenu = new Gio.Menu();
@@ -402,9 +348,25 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         if (i < this._menus.length - 1) this._moveMenu(i + 1, i);
       });
       actionGroup.add_action(downAction);
-
       row.insert_action_group('row', actionGroup);
       row.append(menuButton);
+
+      // edit icon
+      const editIconWidget = Gtk.Image.new_from_icon_name('document-edit-symbolic');
+      const editLabel = new Gtk.Label({ label: gettext('Edit') });
+      const editBox = new Gtk.Box({
+        orientation: Gtk.Orientation.HORIZONTAL,
+        spacing: 6,
+        halign: Gtk.Align.CENTER,
+        valign: Gtk.Align.CENTER,
+      });
+      editBox.append(editIconWidget);
+      editBox.append(editLabel);
+      const editButton = new Gtk.Button({ valign: Gtk.Align.CENTER });
+      editButton.set_child(editBox);
+      editButton.set_tooltip_text(gettext(`Go to editor for 'Menu ${i + 1}'`));
+      editButton.connect('clicked', () => this._showMenuEditor(i));
+      row.append(editButton);
 
       this._listBox.append(row);
     }

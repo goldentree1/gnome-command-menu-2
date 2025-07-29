@@ -196,13 +196,13 @@ export default class CommandsUI extends Adw.PreferencesPage {
             label: _("Drag & drop to rearrange, then 'Apply Changes'."),
             wrap: true,
             hexpand: true,
-            halign: Gtk.Align.START
+            halign: Gtk.Align.END
         });
         dragDropDescription.get_style_context().add_class('dim-label');
         const addRow = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 6,
-            margin_bottom: 3,
+            margin_bottom: 5,
             halign: Gtk.Align.FILL,
             hexpand: true,
         });
@@ -294,12 +294,12 @@ export default class CommandsUI extends Adw.PreferencesPage {
         const addBox = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 2,
-            halign: Gtk.Align.END,
+            halign: Gtk.Align.START,
         });
         addBox.append(addButton);
         addBox.append(addMenuButton);
-        addRow.append(dragDropDescription);
         addRow.append(addBox);
+        addRow.append(dragDropDescription);
 
         // menu commands editor listbox
         const settingsGroup2 = new Adw.PreferencesGroup();
@@ -361,7 +361,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
                     row._iconWidget.set_from_icon_name(icon);
                 }
             }
-
 
             if (item.type === 'separator') {
                 row.set_title(`<b>${_('Separator')}</b>`);
