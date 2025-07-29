@@ -137,13 +137,31 @@ export default class CommandMenuExtension extends Extension {
   }
 
   reloadExtension() {
-    this.disable();
-    this.enable();
+    this.cmdMenus.forEach(m => m.destroy());
+    this.cmdMenus = [];
+    this.#loadMenus();
   }
 
   enable() {
     this._settings = this.getSettings();
+    this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
+      this.reloadExtension();
+    }));
+    this._settingsIds.push(this._settings.connect('changed::config-filepath', () => {
+      this.reloadExtension();
+    }));
+    this.#loadMenus();
+  }
 
+  disable() {
+    this._settingsIds.forEach(s => this._settings.disconnect(s));
+    this._settingsIds = [];
+    this.cmdMenus.forEach(m => m.destroy());
+    this.cmdMenus = [];
+    this._settings = null;
+  }
+
+  #loadMenus() {
     // load cmds
     let filePath = this._settings.get_string('config-filepath');
     if (filePath.startsWith('~/')) filePath = GLib.build_filenamev([GLib.get_home_dir(), filePath.substring(2)]);
@@ -172,14 +190,6 @@ export default class CommandMenuExtension extends Extension {
       this.cmdMenus.push(popup);
     });
 
-    // reload as required
-    this._settingsIds.push(this._settings.connect('changed::restart-counter', () => {
-      this.reloadExtension();
-    }));
-    this._settingsIds.push(this._settings.connect('changed::config-filepath', () => {
-      this.reloadExtension();
-    }));
-
     function parseMenu(obj) {
       if (obj instanceof Object && obj.menu instanceof Array) { // object menu
         return { ...obj, menu: [...obj.menu] };
@@ -189,13 +199,5 @@ export default class CommandMenuExtension extends Extension {
         return { menu: [] };
       }
     }
-  }
-
-  disable() {
-    this._settingsIds.forEach(s => this._settings.disconnect(s));
-    this._settingsIds = [];
-    this.cmdMenus.forEach(m => m.destroy());
-    this.cmdMenus = [];
-    this._settings = null;
   }
 }
