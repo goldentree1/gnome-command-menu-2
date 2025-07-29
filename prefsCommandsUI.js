@@ -33,15 +33,6 @@ export default class CommandsUI extends Adw.PreferencesPage {
         this._settings = settings;
         const menu = this.menus[this.menuIdx];
 
-        const style = new Gtk.CssProvider();
-        const cssData = `button > label { font-weight: normal; }`;
-        style.load_from_data(cssData, cssData.length);
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(),
-            style,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        );
-
         // save and apply changes button
         const settingsGroup0 = new Adw.PreferencesGroup();
         const saveIcon = Gtk.Image.new_from_icon_name('document-save-symbolic');
@@ -49,6 +40,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         const saveBtnBox = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             halign: Gtk.Align.CENTER,
+            spacing: 6
         });
         saveBtnBox.append(saveIcon);
         saveBtnBox.append(saveLabel);

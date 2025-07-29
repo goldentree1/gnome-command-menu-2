@@ -28,7 +28,7 @@ X customize .commands.json path!!! (default to extension dir?)
 X dont allow nested submenus in prefs menu currently (its not part of gnome...) :'-(
 X more complete icon set in Icon Chooser
 X link to more symbolic icons in Icon Chooser
-- COMPLETE templates (description)
+- COMPLETE templates (description+better new pics)
 
 extension.js:
 X ~/.commands.json changeable via gsettings
@@ -41,6 +41,9 @@ X ~/.commands.json changeable via gsettings
       this.enable(); // just rebuild menus, no full disable/enable cycle
     }
 - cache filepath icons?
+
+README.md:
+- update
 
 metadata.json:
 - make sure works with gnome stds - dev guide extensions.gnome.org
