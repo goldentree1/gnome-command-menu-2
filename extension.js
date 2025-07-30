@@ -96,7 +96,7 @@ const CommandMenuPopup = GObject.registerClass(
 
     redrawMenu() {
       // add popup menu title
-      let menuTitle = this.commands.title && this.commands.title.length > 0 ? this.commands.title : "";
+      let menuTitle = this.commands.title ?? "";
       let box = new St.BoxLayout();
 
       let icon = this.loadIcon(this.commands.icon, 'system-status-icon');
@@ -113,6 +113,10 @@ const CommandMenuPopup = GObject.registerClass(
         y_expand: true,
         y_align: Clutter.ActorAlign.CENTER
       });
+      if (icon && menuTitle) {
+        text.set_style('padding-right: 7px;'); // roughly center icon/label
+      }
+
       box.add_child(text);
       this.add_child(box);
 
@@ -177,7 +181,10 @@ export default class CommandMenuExtension extends Extension {
       } else {
         menus.push(parseMenu(json));
       }
-    } catch (e) {
+    } catch (err) {
+      if (!file.query_exists(null)) {
+        logError(err, `${this.uuid}: failed to parse command menu`);
+      }
       menus.push({ menu: [] });
     }
 

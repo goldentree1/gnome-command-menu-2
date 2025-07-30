@@ -32,14 +32,9 @@ X link to more symbolic icons in Icon Chooser
 
 extension.js:
 X ~/.commands.json changeable via gsettings
-- fix padding issues with icon+text (also - show MISSING icon symbol when  )
-- on failed parse: logError(e, this.uuid + ': Failed to load commands.json');
-- better reload (dont enable/disable - might not pass review):
-    reloadExtension() {
-      this.cmdMenus.forEach(m => m.destroy());
-      this.cmdMenus = [];
-      this.enable(); // just rebuild menus, no full disable/enable cycle
-    }
+X better reload (dont enable/disable - might not pass review)
+X fix padding issues with icon+text (also - show MISSING icon symbol when  )
+X on failed cmds parse: logError()
 - cache filepath icons?
 
 README.md:
