@@ -76,7 +76,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     editManuallyBox.append(configPathEntry);
 
     // change config filepath btn
-    const changeConfigFilepathBtn = new Gtk.Button({ icon_name: 'document-open-symbolic', halign: Gtk.Align.END });
+    const changeConfigFilepathBtn = new Gtk.Button({ icon_name: 'document-edit-symbolic', halign: Gtk.Align.END });
     changeConfigFilepathBtn.set_tooltip_text(gettext("Change configuration file location"));
     changeConfigFilepathBtn.connect('clicked', () => {
       const dialog = new Gtk.FileChooserDialog({
@@ -114,7 +114,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     // 'Your Menus' section
     const group2 = new Adw.PreferencesGroup({ title: gettext("Your Menus:") });
     const addMenuButton = new Gtk.Button({
-      margin_bottom: 5,
+      margin_bottom: 6,
       halign: Gtk.Align.START
     });
     const icon = Gtk.Image.new_from_icon_name('document-new-symbolic');
