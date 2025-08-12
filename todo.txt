@@ -28,18 +28,21 @@ X customize .commands.json path!!! (default to extension dir?)
 X dont allow nested submenus in prefs menu currently (its not part of gnome...) :'-(
 X more complete icon set in Icon Chooser
 X link to more symbolic icons in Icon Chooser
-- COMPLETE templates (description+better new pics)
+X COMPLETE templates: description and better new pics (more versatile).
 
 extension.js:
 X ~/.commands.json changeable via gsettings
 X better reload (dont enable/disable - might not pass review)
 X fix padding issues with icon+text (also - show MISSING icon symbol when  )
 X on failed cmds parse: logError()
-- cache filepath icons?
+D cache filepath icons?
 
 README.md:
-- update
+- update instructions: new screenshots with updated prefs.js menu and instructions more relevant to new prefs.js.
 
 metadata.json:
-- make sure works with gnome stds - dev guide extensions.gnome.org
-- test GNOME 45 to try add to metadata?? more 46+47 as well 
+X make sure works with gnome stds - dev guide extensions.gnome.org
+D test GNOME 45 to try add to metadata?? more 46+47 as well 
+
+GNOME Review:
+X required changes

@@ -142,31 +142,32 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       {
         name: "Simple Apps Menu",
         image: "icons/simplemenu.jpg",
-        sourceFile: "examples/simplemenu.json"
+        sourceFile: "examples/simplemenu.json",
+        description: "Browser, files and terminal. That's it!",
       },
       {
         name: "Apple Menu",
         image: "icons/applemenu.jpg",
         sourceFile: "examples/applemenu.json",
-        description: "A menu that does blah-de-blah-de-blah."
+        description: "An Apple-inspired menu... on Linux.",
       },
       {
         name: "Files Menu",
         image: "icons/filesmenu.jpg",
         sourceFile: "examples/filesmenu.json",
-        description: "A menu that does blah-de-blah-de-blah."
+        description: "Access your important files/folders.",
       },
       {
         name: "Penguin Menu",
         image: "icons/penguinmenu.jpg",
         sourceFile: "examples/penguinmenu.json",
-        description: "A menu that does blah-de-blah-de-blah."
+        description: "It has a penguin! And lots more.",
       },
       {
         name: "System Menu",
         image: "icons/systemmenu.jpg",
         sourceFile: "examples/systemmenu.json",
-        description: "A menu that does blah-de-blah-de-blah."
+        description: "Some system utilities and settings.",
       },
     ];
     const templatesFlowBox = new Gtk.FlowBox({
@@ -194,12 +195,23 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       label.add_css_class("heading");
       vbox.append(label);
 
-      const caption = new Gtk.Label({
+      const descBox = new Gtk.Box({
+        orientation: Gtk.Orientation.HORIZONTAL,
+        halign: Gtk.Align.CENTER,  // center horizontally
+        hexpand: false,
+        margin_top: 4,
+      });
+      const desc = new Gtk.Label({
         wrap: true,
         label: template.description || 'No description provided.',
+        halign: Gtk.Align.CENTER,
       });
-      caption.add_css_class("caption");
-      vbox.append(caption)
+      desc.set_justify(Gtk.Justification.CENTER);
+      desc.add_css_class("caption");
+      descBox.set_size_request(180, -1);
+      descBox.append(desc);
+      vbox.append(descBox);
+
       const button = new Gtk.Button();
       button.set_child(vbox);
       button.set_tooltip_text(gettext("Apply this template"));
