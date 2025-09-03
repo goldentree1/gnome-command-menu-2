@@ -2,6 +2,8 @@
 
 A GNOME Shell extension to create highly-customizable menus in the top bar. Quickly access your apps, scripts, files and more.
 
+[![Install on GNOME Shell Extensions](https://img.shields.io/badge/Install_on-GNOME_Shell_Extensions-brightgreen)](https://extensions.gnome.org/extension/8490/command-menu-2/)
+
 Start with one of our templates - or build your own menu!
 
 ![Command Menu Screenshot](screenshots/examples-collage.jpg)
@@ -19,8 +21,11 @@ This project is forked from [Command Menu by arunk140](https://github.com/arunk1
 
 ## Installation
 
-This extension is not yet available on [GNOME Extensions](https://extensions.gnome.org/), but it can be manually installed:
+### Install from GNOME Extensions website (recommended):
+1. [![Install with GNOME Shell Extensions](https://img.shields.io/badge/Install_on-GNOME_Shell_Extensions-brightgreen)](https://extensions.gnome.org/extension/8490/command-menu-2/)
+2. Use [Extension Manager](https://flathub.org/apps/com.mattjakeman.ExtensionManager) to enable it and create your menus!
 
+### Manual install
 1. Install the extension:
     ```bash
     git clone https://github.com/goldentree1/gnome-command-menu-2
@@ -34,14 +39,7 @@ This extension is not yet available on [GNOME Extensions](https://extensions.gno
     ```bash
     gnome-extensions enable command-menu2@goldentree1.github.com
     ```
-    Or alternatively, use [Extension Manager](https://flathub.org/apps/com.mattjakeman.ExtensionManager) to enable it.
-
-3. Create your menu in preferences!
-    ```bash
-    gnome-extensions prefs command-menu2@goldentree1.github.com
-    ```
-     Or alternatively, use [Extension Manager](https://flathub.org/apps/com.mattjakeman.ExtensionManager) to open preferences.
-
+    Or alternatively, use [Extension Manager](https://flathub.org/apps/com.mattjakeman.ExtensionManager) to enable it and access preferences.
 
 ## Usage & Configuration
 This extension reads the configuration stored in [~/.commands.json](~/.commands.json) to generate your menus. You can use the preferences app to create and customize your menus - or manually edit the configuration yourself.
@@ -58,66 +56,12 @@ This extension reads the configuration stored in [~/.commands.json](~/.commands.
     - #### Title
         Give your menu item a custom title
     - #### Icon
-        Icons can either be a system-icon name (e.g., "folder"), or a filepath to an icon (e.g., "~/Downloads/my-icon.jpg"). Check out [this list of system icon names](https://github.com/StorageB/icons/blob/main/GNOME48Adwaita/icons.md) you can use!
+        Icons can either be a system-icon name (e.g., "folder"), or a filepath to an icon (e.g., "~/Downloads/my-icon.jpg"). We have since added a basic 'Icons...' button to help you out, but also check out [this list of system icon names](https://github.com/StorageB/icons/blob/main/GNOME48Adwaita/icons.md) you can use!
     - #### Command
         The command that is run when the menu item is clicked on (e.g., the command 'firefox' will start the Firefox application). You should be able to find common commands like this on Google if you are inexperienced. Our templates also have some examples. You can [learn more about commands and scripting here](https://www.freecodecamp.org/news/bash-scripting-tutorial-linux-shell-script-and-command-line-for-beginners/).
 
 5. Click 'Apply Changes' to see your changes!
 ![Command Menu Screenshot](screenshots/4-done.jpg)
-
-### Manual configuration guide:
-Open ~/.commands.json in a text editor and start editing! You will need to disable and re-enable the extension after to apply your changes.
-
-Here's an example configuration for two menus:
-
-```json
-[
-    {
-        "title": "Apps",
-        "menu": [
-            {
-                "title": "Web Browser",
-                "command": "firefox",
-                "icon": "web-browser-symbolic"
-            },
-            {
-                "title": "Files",
-                "command": "nautilus",
-                "icon": "folder"
-            },
-            {
-                "title": "Terminal",
-                "command": "gnome-terminal",
-                "icon": "utilities-terminal"
-            }
-        ]
-    },
-    {
-        "title": "Media",
-        "icon": "folder-symbolic",
-        "position": "center",
-        "index": 0,
-        "menu": [
-            {
-                "title": "Pictures",
-                "command": "nautilus Pictures",
-                "icon": "folder-pictures-symbolic"
-            },
-            {
-                "title": "Music",
-                "command": "nautilus Music",
-                "icon": "folder-music-symbolic"
-            },
-            {
-                "title": "Videos",
-                "command": "nautilus Videos",
-                "icon": "folder-videos-symbolic"
-            }
-        ]
-    }
-]
-```
-2. Disable the extension, then re-enable it to apply your changes.
 
 ## Contributions
 I would love to hear about any bugs, suggested changes or feature ideas you may have! Please leave an issue or pull request on Github.
