@@ -94,10 +94,9 @@ const CommandMenuPopup = GObject.registerClass(
             if (state && on) GLib.spawn_command_line_async(on);
             else if (!state && off) GLib.spawn_command_line_async(off);
           });
-          
+
           if (monitor) {
             menu.connect('open-state-changed', (menu, open) => {
-              log("open-state-change");
               if (open && monitor) {
                 try {
                   let [ok, out, err, status] = GLib.spawn_command_line_sync(monitor);
@@ -110,7 +109,7 @@ const CommandMenuPopup = GObject.registerClass(
                     toggleUpdate = false;
                   }
                 } catch (e) {
-                  logError(err, `${this.uuid}: monitor command failed: "${monitor}"`);
+                  logError(err, `${this.uuid}: toggle monitor command failed: "${monitor}"`);
                 }
               }
             });
