@@ -77,6 +77,25 @@ const CommandMenuPopup = GObject.registerClass(
 
         if (!cmd.command) return;
 
+        if (cmd.type === 'toggle') {
+          const { on, off, monitor } = cmd.command;
+          let item = new PopupMenu.PopupSwitchMenuItem(cmd.title, false);
+          if (cmd.icon) {
+            const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+            if (icon) {
+              item.insert_child_at_index(icon, 0);
+            }
+          }
+
+          item.connect('toggled', (switchItem, state) => {
+            if (state && on) GLib.spawn_command_line_async(on);
+            else if (!state && off) GLib.spawn_command_line_async(off);
+          });
+
+          menu.addMenuItem(item);
+          return;
+        }
+
         let item = new PopupMenu.PopupBaseMenuItem();
         let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
         if (icon)
