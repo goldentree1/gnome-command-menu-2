@@ -1,0 +1,17 @@
+[
+  {
+    "menu": [{
+    	"type": "toggle",
+    	"title": "Dark Mode",
+    	"icon": "utilities-terminal",
+    	"command": {
+    		"on": "gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'",
+    		"off": "gsettings set org.gnome.desktop.interface color-scheme 'default'",
+    		"monitor": "bash -c \"gsettings get org.gnome.desktop.interface color-scheme | grep 'dark'\""
+    	}
+    }],
+    "title": "Toggle Menu",
+    "icon": "utilities-terminal-symbolic",
+    "position": "center"
+  }
+]

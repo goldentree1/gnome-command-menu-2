@@ -87,10 +87,34 @@ const CommandMenuPopup = GObject.registerClass(
             }
           }
 
+          let toggleUpdate = false;
+
           item.connect('toggled', (switchItem, state) => {
+            if (toggleUpdate) return;
             if (state && on) GLib.spawn_command_line_async(on);
             else if (!state && off) GLib.spawn_command_line_async(off);
           });
+          
+          if (monitor) {
+            menu.connect('open-state-changed', (menu, open) => {
+              log("open-state-change");
+              if (open && monitor) {
+                try {
+                  let [ok, out, err, status] = GLib.spawn_command_line_sync(monitor);
+                  let outStr = out ? imports.byteArray.toString(out).trim() : "";
+                  let errStr = err ? imports.byteArray.toString(err).trim() : "";
+                  const monitorState = outStr.length > 0;
+                  if (item.state !== monitorState) {
+                    toggleUpdate = true;
+                    item.setToggleState(monitorState);
+                    toggleUpdate = false;
+                  }
+                } catch (e) {
+                  logError(err, `${this.uuid}: monitor command failed: "${monitor}"`);
+                }
+              }
+            });
+          }
 
           menu.addMenuItem(item);
           return;
