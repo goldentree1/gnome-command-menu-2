@@ -4,7 +4,8 @@
   "shell-version": [
     "46", 
     "47",
-    "48"
+    "48",
+    "49"
   ],
   "url": "https://github.com/goldentree1/gnome-command-menu-2",
   "uuid": "command-menu2@goldentree1.github.com",
