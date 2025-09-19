@@ -9,6 +9,6 @@
   ],
   "url": "https://github.com/goldentree1/gnome-command-menu-2",
   "uuid": "command-menu2@goldentree1.github.com",
-  "version": 2,
+  "version": 3,
   "settings-schema": "org.gnome.shell.extensions.commandmenu2"
 }
