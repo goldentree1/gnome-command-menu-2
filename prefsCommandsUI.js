@@ -219,6 +219,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
         const gMenu = new Gio.Menu();
         gMenu.append(_('Add Menu Item'), 'addmenu.addCommand');
+        gMenu.append(_('Add Toggle Menu Item'), 'addmenu.addToggle');
         gMenu.append(_('Add Separator'), 'addmenu.addSeparator');
         gMenu.append(_('Add Label'), 'addmenu.addLabel');
         gMenu.append(_('Add Submenu'), 'addmenu.addSubmenu');
@@ -236,11 +237,27 @@ export default class CommandsUI extends Adw.PreferencesPage {
             this._populateListBox(this.commandsListBox, 0, [{
                 title: 'New Command',
                 icon: 'utilities-terminal',
-                command: 'notify-send hello',
+                command: "notify-send 'command ran!'",
             }]);
             this._listBoxScrollToBottom();
         });
         addMenuActions.add_action(addCommandAction);
+
+        const addToggleAction = new Gio.SimpleAction({ name: 'addToggle' });
+        addToggleAction.connect('activate', () => {
+            this._populateListBox(this.commandsListBox, 0, [{
+                "type": "toggle",
+                "title": "New Toggle Item",
+                "icon": "utilities-terminal",
+                "command": {
+                    "on": "notify-send 'toggle on!'",
+                    "off": "notify-send 'toggle off!'",
+                    "monitor": ""
+                }
+            }],);
+            this._listBoxScrollToBottom();
+        });
+        addMenuActions.add_action(addToggleAction);
 
         const addSeparatorAction = new Gio.SimpleAction({ name: 'addSeparator' });
         addSeparatorAction.connect('activate', () => {
@@ -457,35 +474,83 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 iconBox.append(entryRowIcon);
                 iconBox.append(findIconButton);
 
-                // command editor
-                const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
-                const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '', hexpand: true });
-                entryRowCommand.connect('notify::text', () => {
-                    item.command = entryRowCommand.text;
-                });
-                const chooseAppButton = new Gtk.Button({
-                    label: _('Apps...'),
-                    halign: Gtk.Align.END,
-                    margin_bottom: 5,
-                    margin_top: 5,
-                    margin_start: 8,
-                    margin_end: 8,
-                });
-                chooseAppButton.connect('clicked', () => {
-                    const dialog = new CmdChooser(this.get_root(), (cli) => {
-                        if (cli) {
-                            entryRowCommand.set_text(cli);
-                            item.command = cli;
-                        }
+                // this is a on/off/monitor/monitor_interval command
+                if (typeof item.command !== "object") {
+                    // command editor
+                    const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                    const entryRowCommand = new Adw.EntryRow({ title: _('Command:'), text: item.command || '', hexpand: true });
+                    entryRowCommand.connect('notify::text', () => {
+                        item.command = entryRowCommand.text;
                     });
-                    dialog.present();
-                });
-                commandBox.append(entryRowCommand);
-                commandBox.append(chooseAppButton);
+                    const chooseAppButton = new Gtk.Button({
+                        label: _('Apps...'),
+                        halign: Gtk.Align.END,
+                        margin_bottom: 5,
+                        margin_top: 5,
+                        margin_start: 8,
+                        margin_end: 8,
+                    });
+                    chooseAppButton.connect('clicked', () => {
+                        const dialog = new CmdChooser(this.get_root(), (cli) => {
+                            if (cli) {
+                                entryRowCommand.set_text(cli);
+                                item.command = cli;
+                            }
+                        });
+                        dialog.present();
+                    });
+                    commandBox.append(entryRowCommand);
+                    commandBox.append(chooseAppButton);
 
-                row.add_row(entryRowTitle);
-                row.add_row(iconBox);
-                row.add_row(commandBox);
+                    row.add_row(entryRowTitle);
+                    row.add_row(iconBox);
+                    row.add_row(commandBox);
+                } else {
+                    // const on = item.command.on ?? null;
+                    // const off = item.command.off ?? null;
+                    // const monitor = item.command.monitor ?? null;
+                    {
+                        // ON command editor
+                        const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                        const entryRowCommand = new Adw.EntryRow({ title: _('Toggle-ON Command:'), text: item.command.on || '', hexpand: true });
+                        entryRowCommand.connect('notify::text', () => {
+                            item.command.on = entryRowCommand.text;
+                        });
+                        commandBox.append(entryRowCommand);
+
+                        row.add_row(entryRowTitle);
+                        row.add_row(iconBox);
+                        row.add_row(commandBox);
+                    }
+                    {
+                        // OFF command editor
+                        const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                        const entryRowCommand = new Adw.EntryRow({ title: _('Toggle-OFF Command:'), text: item.command.off || '', hexpand: true });
+                        entryRowCommand.connect('notify::text', () => {
+                            item.command.off = entryRowCommand.text;
+                        });
+                        commandBox.append(entryRowCommand);
+
+                        row.add_row(entryRowTitle);
+                        row.add_row(iconBox);
+                        row.add_row(commandBox);
+                    }
+                    {
+                        // command editor
+                        const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                        const entryRowCommand = new Adw.EntryRow({ title: _('Toggle-MONITOR Command:'), text: item.command.monitor || '', hexpand: true });
+                        entryRowCommand.connect('notify::text', () => {
+                            item.command.monitor = entryRowCommand.text;
+                        });
+                        commandBox.append(entryRowCommand);
+
+                        row.add_row(entryRowTitle);
+                        row.add_row(iconBox);
+                        row.add_row(commandBox);
+                    }
+
+                }
+
             }
 
             // menu button (add/delete)

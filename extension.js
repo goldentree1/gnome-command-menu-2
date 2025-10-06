@@ -89,8 +89,9 @@ const CommandMenuPopup = GObject.registerClass(
 
           let toggleUpdate = false;
 
+          // TODO: bug:: why does the menu sometimes close?
           item.connect('toggled', (switchItem, state) => {
-            if (toggleUpdate) return;
+            if (toggleUpdate) return; // prevent monitor updates triggering cmds
             if (state && on) GLib.spawn_command_line_async(on);
             else if (!state && off) GLib.spawn_command_line_async(off);
           });
