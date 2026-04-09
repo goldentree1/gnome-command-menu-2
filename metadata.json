@@ -1,12 +1,7 @@
 {
   "description": "A GNOME Shell extension to create highly-customizable menus in the top bar, forked from Command Menu by arunk140. Quickly access your apps, scripts, files and more.",
   "name": "Command Menu 2",
-  "shell-version": [
-    "46", 
-    "47",
-    "48",
-    "49"
-  ],
+  "shell-version": ["46", "47", "48", "49", "50"],
   "url": "https://github.com/goldentree1/gnome-command-menu-2",
   "uuid": "command-menu2@goldentree1.github.com",
   "version": 3,
