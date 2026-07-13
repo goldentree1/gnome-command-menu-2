@@ -42,6 +42,12 @@ const CommandMenuPopup = GObject.registerClass(
       this._refreshDynamics(true);
     }
 
+    _connectSignal(object, signal, callback) {
+      const id = object.connect(signal, callback);
+      this._signalIds.push([object, id]);
+      return id;
+    }
+
     // dynamic title helpers...
 
     _hasDynamicTitle(text) {
@@ -185,6 +191,53 @@ const CommandMenuPopup = GObject.registerClass(
         }
 
         if (!cmd.command) return;
+
+        if (cmd.type === 'toggle') {
+          const { on, off, monitor } = cmd.command;
+          const item = new PopupMenu.PopupSwitchMenuItem(cmd.title, false);
+          if (cmd.icon) {
+            const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+            if (icon) item.insert_child_at_index(icon, 0);
+          }
+
+          let toggleUpdate = false;
+
+          if (cmd.dynamicTitle && this._hasDynamicTitle(cmd.title))
+            this._registerDynamicLabel(item.label, cmd.title, cmd.refreshInterval, menu);
+
+          this._connectSignal(item, 'toggled', (_switchItem, state) => {
+            if (toggleUpdate) return;
+            if (state && on) GLib.spawn_command_line_async(on);
+            else if (!state && off) GLib.spawn_command_line_async(off);
+          });
+
+          if (monitor) {
+            this._connectSignal(menu, 'open-state-changed', (_menu, open) => {
+              if (!open) return;
+              try {
+                const proc = Gio.Subprocess.new(
+                  ['bash', '-lc', monitor],
+                  Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
+                );
+                proc.communicate_utf8_async(null, null)
+                  .then(([stdout]) => {
+                    const monitorState = (stdout ?? '').trim().length > 0;
+                    if (item.state !== monitorState) {
+                      toggleUpdate = true;
+                      item.setToggleState(monitorState);
+                      toggleUpdate = false;
+                    }
+                  })
+                  .catch(e => logError(e, `command-menu2: toggle monitor failed: "${monitor}"`));
+              } catch (e) {
+                logError(e, `command-menu2: toggle monitor command: "${monitor}"`);
+              }
+            });
+          }
+
+          menu.addMenuItem(item);
+          return;
+        }
 
         let item = new PopupMenu.PopupBaseMenuItem();
         let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
