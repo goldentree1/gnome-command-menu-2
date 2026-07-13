@@ -120,6 +120,17 @@ const CommandMenuPopup = GObject.registerClass(
       box.add_child(text);
       this.add_child(box);
 
+      // button mode — no menu, exec command onclick
+      if (this.commands.type === 'button') {
+        if (this._indicator) this._indicator.visible = false;
+        this.menu.toggle = () => {
+          if (this.commands.command)
+            GLib.spawn_command_line_async(this.commands.command);
+        };
+        this._clickGesture.set_enabled(true);
+        return;
+      }
+
       // populate menu items
       if ((!Array.isArray(this.commands.menu) || this.commands.menu.length === 0)) {
         this.commands.menu = [{
@@ -176,7 +187,7 @@ export default class CommandMenuExtension extends Extension {
       if (!ok) throw Error();
       const decoder = new TextDecoder();
       const json = JSON.parse(decoder.decode(contents));
-      if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))) {
+      if (json instanceof Array && json.length && (json[0] instanceof Array || json[0] instanceof Object)) {
         json.forEach(j => menus.push(parseMenu(j)));
       } else {
         menus.push(parseMenu(json));
@@ -200,6 +211,8 @@ export default class CommandMenuExtension extends Extension {
     function parseMenu(obj) {
       if (obj instanceof Object && obj.menu instanceof Array) { // object menu
         return { ...obj, menu: [...obj.menu] };
+      } else if (obj instanceof Object && obj.type === 'button') {
+        return { ...obj };
       } else if (obj instanceof Array) { // simple array menu
         return { menu: [...obj] };
       } else {
