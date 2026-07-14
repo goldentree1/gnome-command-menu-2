@@ -13,10 +13,11 @@ Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async');
 
 const CommandMenuPopup = GObject.registerClass(
   class CommandMenuPopup extends PanelMenu.Button {
-    _init(cmds, settings) {
+    _init(cmds, settings, uuid) {
       super._init(0.5);
       this.commands = cmds;
       this.commandMenuSettings = settings;
+      this.uuid = uuid;
       this._dynamicLabels = [];
       this._signalIds = [];
       this._timerIds = [];
@@ -29,17 +30,7 @@ const CommandMenuPopup = GObject.registerClass(
         this._dynamicLabels = [];
       });
 
-      // render menu
-      this.redrawMenu();
-
-      // asynchronously render dynamic titles
-      if (this.menu) {
-        const id = this.menu.connect('open-state-changed', (_menu, open) => {
-          if (open) this._refreshDynamics();
-        });
-        this._signalIds.push([this.menu, id]);
-      }
-      this._refreshDynamics(true);
+      this.renderMenu();
     }
 
     _connectSignal(object, signal, callback) {
@@ -48,14 +39,11 @@ const CommandMenuPopup = GObject.registerClass(
       return id;
     }
 
-    // dynamic title helpers...
-
-    _hasDynamicTitle(text) {
-      return typeof text === 'string' && text.includes('$(');
-    }
-
     async _resolveDynamicTitle(text) {
-      if (!this._hasDynamicTitle(text)) return text;
+      // if no bash substitution: return as-is
+      if (typeof text !== 'string' || !text.includes('$(')) return text;
+
+      // use bash for dynamic title substitution
       try {
         const proc = Gio.Subprocess.new(
           ['bash', '-c', `printf '%s' "${text.replace(/"/g, '\\"')}"`],
@@ -64,17 +52,15 @@ const CommandMenuPopup = GObject.registerClass(
         const [stdout] = await proc.communicate_utf8_async(null, null);
         return stdout || '';
       } catch (e) {
-        logError(e, 'command-menu2: resolveDynamicTitle failed');
+        logError(e, `${this.uuid}: resolving dynamic title failed`);
         return text;
       }
     }
 
-    async _registerDynamicLabel(label, template, refreshInterval, parentMenu) {
+    _registerDynamicTitle(label, template, refreshInterval, parentMenu) {
       const interval = Math.max(1, Number(refreshInterval)); // minimum 1s refresh
       const entry = { label, template, interval, parentMenu, sourceId: 0 };
       this._dynamicLabels.push(entry);
-
-      label.text = await this._resolveDynamicTitle(template);
 
       if (!parentMenu) {
         // no parent: always refresh
@@ -82,11 +68,14 @@ const CommandMenuPopup = GObject.registerClass(
       } else {
         // start refresh while parent menu/submenu is open, otherwise stop.
         const id = parentMenu.connect('open-state-changed', (_menu, open) => {
+          this._resolveDynamicTitle(entry.template).then(text => {
+            try { entry.label.text = text; } catch (e) {}
+          });
           if (open) this._startTimer(entry);
           else this._stopTimer(entry);
         });
+
         this._signalIds.push([parentMenu, id]);
-        if (parentMenu.isOpen) this._startTimer(entry);
       }
     }
 
@@ -95,10 +84,7 @@ const CommandMenuPopup = GObject.registerClass(
       entry.sourceId = GLib.timeout_add_seconds(
         GLib.PRIORITY_DEFAULT, entry.interval, () => {
           this._resolveDynamicTitle(entry.template).then(text => {
-            entry.label.text = text;
-          }).catch(() => {
-            this._stopTimer(entry);
-            return GLib.SOURCE_REMOVE;
+            try { entry.label.text = text; } catch (e) { }
           });
           return GLib.SOURCE_CONTINUE;
         },
@@ -114,19 +100,16 @@ const CommandMenuPopup = GObject.registerClass(
     }
 
     _refreshDynamics(forceAll = false) {
-      const entries = forceAll
+      const items = forceAll
         ? this._dynamicLabels
         : this._dynamicLabels.filter(e => !e.parentMenu || e.parentMenu.isOpen);
-      entries.forEach(entry => {
-        this._resolveDynamicTitle(entry.template).then(text => {
-          try { entry.label.text = text; } catch (e) {}
-        });
-      });
+      items.forEach(entry =>
+          this._resolveDynamicTitle(entry.template).then(text => {
+            try { entry.label.text = text; } catch (e) {}
+          }));
     }
 
-    // main fns
-
-    loadIcon(icon, style_class) {
+    _loadIcon(icon, style_class) {
       if (typeof icon !== 'string' || !icon.length) return null;
       // sys icon
       if (!icon.includes('/'))
@@ -167,8 +150,8 @@ const CommandMenuPopup = GObject.registerClass(
           sectionLabel.actor.set_style('padding-top: 0px; padding-bottom: 0px; min-height: 0;');
           sectionLabel.actor.add_child(label);
 
-          if (cmd.dynamicTitle && this._hasDynamicTitle(cmd.title))
-            this._registerDynamicLabel(label, cmd.title, cmd.refreshInterval, menu);
+          if (cmd.dynamicTitle === true)
+            this._registerDynamicTitle(label, cmd.title, cmd.refreshInterval, menu);
 
           menu.addMenuItem(sectionLabel);
           return;
@@ -178,12 +161,12 @@ const CommandMenuPopup = GObject.registerClass(
           if (!cmd.submenu) return;
           const submenu = new PopupMenu.PopupSubMenuMenuItem(cmd.title);
           if (cmd.icon) {
-            const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+            const icon = this._loadIcon(cmd.icon, 'popup-menu-icon');
             if (icon) submenu.insert_child_at_index(icon, 1);
           }
 
-          if (cmd.dynamicTitle && this._hasDynamicTitle(cmd.title))
-            this._registerDynamicLabel(submenu.label, cmd.title, cmd.refreshInterval, menu);
+          if (cmd.dynamicTitle === true)
+            this._registerDynamicTitle(submenu.label, cmd.title, cmd.refreshInterval, menu);
 
           this.populateMenuItems(submenu.menu, cmd.submenu, level + 1);
           menu.addMenuItem(submenu);
@@ -196,14 +179,14 @@ const CommandMenuPopup = GObject.registerClass(
           const { on, off, monitor } = cmd.command;
           const item = new PopupMenu.PopupSwitchMenuItem(cmd.title, false);
           if (cmd.icon) {
-            const icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+            const icon = this._loadIcon(cmd.icon, 'popup-menu-icon');
             if (icon) item.insert_child_at_index(icon, 0);
           }
 
           let toggleUpdate = false;
 
-          if (cmd.dynamicTitle && this._hasDynamicTitle(cmd.title))
-            this._registerDynamicLabel(item.label, cmd.title, cmd.refreshInterval, menu);
+          if (cmd.dynamicTitle === true)
+            this._registerDynamicTitle(item.label, cmd.title, cmd.refreshInterval, menu);
 
           this._connectSignal(item, 'toggled', (_switchItem, state) => {
             if (toggleUpdate) return;
@@ -228,9 +211,9 @@ const CommandMenuPopup = GObject.registerClass(
                       toggleUpdate = false;
                     }
                   })
-                  .catch(e => logError(e, `command-menu2: toggle monitor failed: "${monitor}"`));
+                  .catch(e => logError(e, `${this.uuid}: toggle monitor failed: "${monitor}"`));
               } catch (e) {
-                logError(e, `command-menu2: toggle monitor command: "${monitor}"`);
+                logError(e, `${this.uuid}: toggle monitor failed: "${monitor}"`);
               }
             });
           }
@@ -240,7 +223,7 @@ const CommandMenuPopup = GObject.registerClass(
         }
 
         let item = new PopupMenu.PopupBaseMenuItem();
-        let icon = this.loadIcon(cmd.icon, 'popup-menu-icon');
+        let icon = this._loadIcon(cmd.icon, 'popup-menu-icon');
         if (icon)
           item.add_child(icon);
         let label = new St.Label({
@@ -250,8 +233,8 @@ const CommandMenuPopup = GObject.registerClass(
         });
         item.add_child(label);
 
-        if (cmd.dynamicTitle && this._hasDynamicTitle(cmd.title))
-          this._registerDynamicLabel(label, cmd.title, cmd.refreshInterval, menu);
+        if (cmd.dynamicTitle === true)
+          this._registerDynamicTitle(label, cmd.title, cmd.refreshInterval, menu);
 
         item.connect('activate', () => {
           GLib.spawn_command_line_async(cmd.command);
@@ -260,13 +243,12 @@ const CommandMenuPopup = GObject.registerClass(
       });
     }
 
-    redrawMenu() {
-      // add menu title
+    renderMenu() {
       let menuTitle = this.commands.title ?? "";
       let box = new St.BoxLayout();
 
       // add menu icon
-      let icon = this.loadIcon(this.commands.icon, 'system-status-icon');
+      let icon = this._loadIcon(this.commands.icon, 'system-status-icon');
       if (!icon && menuTitle === "") { // fallback icon
         icon = new St.Icon({
           icon_name: 'utilities-terminal-symbolic',
@@ -275,6 +257,7 @@ const CommandMenuPopup = GObject.registerClass(
       }
       if (icon) box.add_child(icon);
 
+      // add menu title
       let text = new St.Label({
         text: menuTitle,
         y_expand: true,
@@ -283,35 +266,33 @@ const CommandMenuPopup = GObject.registerClass(
       if (icon && menuTitle) {
         text.set_style('padding-right: 7px;'); // roughly center icon/label
       }
+      if (this.commands.dynamicTitle)
+        this._registerDynamicTitle(text, menuTitle, this.commands.refreshInterval);
 
       box.add_child(text);
       this.add_child(box);
 
-      // dynamic titles: re-render every 'refreshInterval' seconds ONLY while parent menu is open
-      // of course, top-level items (i.e., gnome topbar menus) have no parent: always refresh.
-      if (this.commands.dynamicTitle && this._hasDynamicTitle(menuTitle))
-        this._registerDynamicLabel(text, menuTitle, this.commands.refreshInterval);
-
-      // button mode — no menu, exec command onclick
       if (this.commands.type === 'button') {
+        // button mode: exec command onclick
         if (this._indicator) this._indicator.visible = false;
         this.menu.toggle = () => {
           if (this.commands.command)
             GLib.spawn_command_line_async(this.commands.command);
         };
         this._clickGesture.set_enabled(true);
-        return;
+      } else {
+        // menu mode: populate menu items
+        if ((!Array.isArray(this.commands.menu) || this.commands.menu.length === 0)) {
+          this.commands.menu = [{
+            title: "Customize This Menu...",
+            icon: 'preferences-system-symbolic',
+            command: `gnome-extensions prefs ${this.uuid}`
+          }];
+        }
+        this.populateMenuItems(this.menu, this.commands.menu, 0);
       }
 
-      // populate menu items
-      if ((!Array.isArray(this.commands.menu) || this.commands.menu.length === 0)) {
-        this.commands.menu = [{
-          title: "Customize This Menu...",
-          icon: 'preferences-system-symbolic',
-          command: "gnome-extensions prefs command-menu2@goldentree1.github.com"
-        }];
-      }
-      this.populateMenuItems(this.menu, this.commands.menu, 0);
+      this._refreshDynamics(true);
     }
   });
 
@@ -326,7 +307,7 @@ export default class CommandMenuExtension extends Extension {
   reloadExtension() {
     this.cmdMenus.forEach(m => m.destroy());
     this.cmdMenus = [];
-    this.#loadMenus();
+    this._loadMenus();
   }
 
   enable() {
@@ -337,7 +318,7 @@ export default class CommandMenuExtension extends Extension {
     this._settingsIds.push(this._settings.connect('changed::config-filepath', () => {
       this.reloadExtension();
     }));
-    this.#loadMenus();
+    this._loadMenus();
   }
 
   disable() {
@@ -348,7 +329,7 @@ export default class CommandMenuExtension extends Extension {
     this._settings = null;
   }
 
-  #loadMenus() {
+  _loadMenus() {
     // load cmds
     let filePath = this._settings.get_string('config-filepath');
     if (filePath.startsWith('~/')) filePath = GLib.build_filenamev([GLib.get_home_dir(), filePath.substring(2)]);
@@ -359,21 +340,19 @@ export default class CommandMenuExtension extends Extension {
       if (!ok) throw Error();
       const decoder = new TextDecoder();
       const json = JSON.parse(decoder.decode(contents));
-      if (json instanceof Array && json.length && (json[0] instanceof Array || json[0] instanceof Object)) {
+      if (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && (json[0].menu instanceof Array || json[0].type === 'button')))) {
         json.forEach(j => menus.push(parseMenu(j)));
       } else {
         menus.push(parseMenu(json));
       }
     } catch (err) {
-      if (!file.query_exists(null)) {
-        logError(err, `${this.uuid}: failed to parse command menu`);
-      }
+      logError(err, `${this.uuid}: failed to parse command menu`);
       menus.push({ menu: [] });
     }
 
     // add menus to panel
     menus.forEach((menu, i) => {
-      const popup = new CommandMenuPopup(menu, this._settings);
+      const popup = new CommandMenuPopup(menu, this._settings, this.uuid);
       const index = Number.isInteger(+menu.index) ? +menu.index : 1;
       const pos = ['left', 'center', 'right'].includes(menu.position) ? menu.position : 'left';
       Main.panel.addToStatusArea(`commandMenu2_${i}`, popup, index, pos);
@@ -383,7 +362,7 @@ export default class CommandMenuExtension extends Extension {
     function parseMenu(obj) {
       if (obj instanceof Object && obj.menu instanceof Array) { // object menu
         return { ...obj, menu: [...obj.menu] };
-      } else if (obj instanceof Object && obj.type === 'button') {
+      } else if (obj instanceof Object && obj.type === 'button') { // button-only
         return { ...obj };
       } else if (obj instanceof Array) { // simple array menu
         return { menu: [...obj] };
