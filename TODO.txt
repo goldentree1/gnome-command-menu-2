@@ -1,0 +1,2 @@
+- Check how to make a proper error logger? eg look at other source code eg dash to panel
+- Does toggle item need extra signal cleanup (uses this.connect??)
