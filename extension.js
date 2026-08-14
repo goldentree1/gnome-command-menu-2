@@ -52,7 +52,7 @@ const CommandMenuCommandItem = GObject.registerClass(
 
       if (cmd.command) {
         this.connect('activate', () => {
-          GLib.spawn_command_line_async(cmd.command);
+          popup.runCommand(cmd.command);
         });
       }
     }
@@ -74,8 +74,8 @@ const CommandMenuToggleItem = GObject.registerClass(
       const { on, off, monitor } = cmd.command || {};
       popup.connectSignal(this, 'toggled', (_, state) => {
         if (this._toggleUpdate) return;
-        if (state && on) GLib.spawn_command_line_async(on);
-        else if (!state && off) GLib.spawn_command_line_async(off);
+        if (state && on) popup.runCommand(on);
+        else if (!state && off) popup.runCommand(off);
       });
 
       if (monitor) {
@@ -206,18 +206,6 @@ const CommandMenuPopup = GObject.registerClass(
       return id;
     }
 
-    runCommand(cmd) {
-      if (typeof cmd !== 'string' || !cmd) return;
-      try {
-        Gio.Subprocess.new(
-          ['bash', '-c', cmd],
-          Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
-        );
-      } catch (e) {
-        logError(e, `${this.uuid}: failed to run: "${cmd}"`);
-      }
-    }
-
     loadIcon(icon, style_class) {
       if (typeof icon !== 'string' || !icon.length) return null;
       // sys icon
@@ -230,6 +218,18 @@ const CommandMenuPopup = GObject.registerClass(
       if (!file.query_exists(null)) return new St.Icon({ style_class });
       const gicon = new Gio.FileIcon({ file });
       return new St.Icon({ gicon, style_class });
+    }
+
+    runCommand(cmd) {
+      if (typeof cmd !== 'string' || !cmd) return;
+      try {
+        Gio.Subprocess.new(
+          ['bash', '-c', cmd],
+          Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
+        );
+      } catch (e) {
+        logError(e, `${this.uuid}: failed to run: "${cmd}"`);
+      }
     }
 
     populateMenuItems(menu, cmds, level) {
@@ -295,7 +295,7 @@ const CommandMenuPopup = GObject.registerClass(
         if (this._indicator) this._indicator.visible = false;
         this.menu.toggle = () => {
           if (this.commands.command)
-            GLib.spawn_command_line_async(this.commands.command);
+            this.runCommand(this.commands.command);
         };
         this._clickGesture.set_enabled(true);
       } else {
