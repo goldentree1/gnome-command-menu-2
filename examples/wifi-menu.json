@@ -1,0 +1,39 @@
+{
+  "title": "Wi-Fi: $(nmcli -t -f ACTIVE,SSID,BARS dev wifi | grep '^yes' | cut -d: -f2- | tr ':' ' ' | grep -v '^$' || echo 'Not connected')",
+  "dynamicTitle": true,
+  "refreshInterval": 6,
+  "icon": "network-wireless-symbolic",
+  "position": "left",
+  "menu": [
+    {
+      "type": "label",
+      "title": "Public IP: $(curl -s --max-time 4 api.ipify.org || echo 'no internet')$(nmcli -t -f NAME,TYPE con show --active | grep -q ':vpn$' && echo ' (VPN active)')",
+      "dynamicTitle": true,
+      "refreshInterval": 6
+    },
+    {
+      "type": "label",
+      "title": "LAN: $(hostname -I | cut -d' ' -f1 | grep -v '^$' || echo 'no connection')$(ip route | grep default | cut -d' ' -f3 | grep -v '^$' | sed 's/^/ via /')",
+      "dynamicTitle": true,
+      "refreshInterval": 6
+    },
+    {
+      "type": "toggle",
+      "title": "Wi-Fi",
+      "icon": "network-wireless-symbolic",
+      "command": {
+        "on": "rfkill unblock wifi",
+        "off": "rfkill block wifi",
+        "monitor": "rfkill list wifi | grep 'Soft blocked: no'"
+      }
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "title": "Wi-Fi Settings...",
+      "icon": "preferences-system-symbolic",
+      "command": "gnome-control-center wifi"
+    }
+  ]
+}

@@ -1,39 +1,39 @@
 {
-    "title": "Files",
-    "position": "center",
-    "menu": [
-        {
-            "title": "Documents",
-            "command": "nautilus Documents",
-            "icon": "folder-documents-symbolic"
-        },
-        {
-            "title": "Downloads",
-            "command": "nautilus Downloads",
-            "icon": "folder-download-symbolic"
-        },
-        {
-            "title": "Pictures",
-            "command": "nautilus Pictures",
-            "icon": "folder-pictures-symbolic"
-        },
-        {
-            "title": "Music",
-            "command": "nautilus Music",
-            "icon": "folder-music-symbolic"
-        },
-        {
-            "title": "Videos",
-            "command": "nautilus Videos",
-            "icon": "folder-videos-symbolic"
-        },
-        {
-            "type": "separator"
-        },
-        {
-            "title": "File System",
-            "command": "nautilus /",
-            "icon": "drive-harddisk-symbolic"
-        }
-    ]
+  "title": "Files",
+  "position": "center",
+  "menu": [
+    {
+      "title": "Documents",
+      "command": "bash -c 'xdg-open ~/Documents'",
+      "icon": "folder-documents-symbolic"
+    },
+    {
+      "title": "Downloads",
+      "command": "bash -c 'xdg-open ~/Downloads'",
+      "icon": "folder-download-symbolic"
+    },
+    {
+      "title": "Pictures",
+      "command": "bash -c 'xdg-open ~/Pictures'",
+      "icon": "folder-pictures-symbolic"
+    },
+    {
+      "title": "Music",
+      "command": "bash -c 'xdg-open ~/Music'",
+      "icon": "folder-music-symbolic"
+    },
+    {
+      "title": "Videos",
+      "command": "bash -c 'xdg-open ~/Videos'",
+      "icon": "folder-videos-symbolic"
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "title": "File System",
+      "command": "xdg-open /",
+      "icon": "drive-harddisk-symbolic"
+    }
+  ]
 }

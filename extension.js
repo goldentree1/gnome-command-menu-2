@@ -43,12 +43,12 @@ const CommandMenuCommandItem = GObject.registerClass(
         if (icon) this.add_child(icon);
       }
 
-      const label = new St.Label({
+      this.label = new St.Label({
         text: cmd.title,
         x_expand: true,
         y_align: Clutter.ActorAlign.CENTER
       });
-      this.add_child(label);
+      this.add_child(this.label);
 
       if (cmd.command) {
         this.connect('activate', () => {
@@ -179,7 +179,11 @@ const CommandMenuPopup = GObject.registerClass(
 
     registerDynamicTitle(label, template, refreshInterval, parentMenu) {
       const entry = { label, template, sourceId: 0 };
-      const interval = Math.max(1, Number(refreshInterval)); // minimum 1s refresh
+
+      let interval = Number(refreshInterval);
+      if (isNaN(interval)) interval = 30;
+      if (interval < 1) interval = 1;
+
       this._dynamicLabels.push(entry);
 
       if (!parentMenu) {
@@ -200,6 +204,18 @@ const CommandMenuPopup = GObject.registerClass(
       const id = obj.connect(signal, cb);
       this._signalIds.push([obj, id]);
       return id;
+    }
+
+    runCommand(cmd) {
+      if (typeof cmd !== 'string' || !cmd) return;
+      try {
+        Gio.Subprocess.new(
+          ['bash', '-c', cmd],
+          Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
+        );
+      } catch (e) {
+        logError(e, `${this.uuid}: failed to run: "${cmd}"`);
+      }
     }
 
     loadIcon(icon, style_class) {

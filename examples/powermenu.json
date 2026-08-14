@@ -1,0 +1,39 @@
+{
+  "icon": "system-shutdown-symbolic",
+  "position": "right",
+  "index": 100,
+  "menu": [
+    {
+      "title": "Lock Screen",
+      "icon": "system-lock-screen-symbolic",
+      "command": "gnome-screensaver-command -l"
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "title": "Log Out '$(whoami)'...",
+      "dynamicTitle": true,
+      "icon": "system-log-out-symbolic",
+      "command": "gnome-session-quit --logout"
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "title": "Suspend",
+      "icon": "media-playback-pause-symbolic",
+      "command": "systemctl suspend"
+    },
+    {
+      "title": "Restart",
+      "icon": "system-reboot-symbolic",
+      "command": "gnome-session-quit --reboot"
+    },
+    {
+      "title": "Shut Down",
+      "icon": "system-shutdown-symbolic",
+      "command": "gnome-session-quit --power-off"
+    }
+  ]
+}

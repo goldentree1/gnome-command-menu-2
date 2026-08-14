@@ -1,0 +1,20 @@
+{
+  "title": "Power Mode",
+  "menu": [
+    {
+      "title": "Performance",
+      "icon": "power-profile-performance-symbolic",
+      "command": "powerprofilesctl set performance"
+    },
+    {
+      "title": "Balanced",
+      "icon": "power-profile-balanced-symbolic",
+      "command": "powerprofilesctl set balanced"
+    },
+    {
+      "title": "Power Saver",
+      "icon": "power-profile-power-saver-symbolic",
+      "command": "powerprofilesctl set power-saver"
+    }
+  ]
+}

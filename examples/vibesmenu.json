@@ -1,0 +1,68 @@
+{
+  "title": "Vibes",
+  "icon": "computer-symbolic",
+  "position": "left",
+  "menu": [
+    {
+      "type": "label",
+      "title": "-- Display --"
+    },
+    {
+      "type": "toggle",
+      "title": "Dark Mode",
+      "icon": "weather-clear-night-symbolic",
+      "command": {
+        "on": "gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'",
+        "off": "gsettings set org.gnome.desktop.interface color-scheme 'default'",
+        "monitor": "gsettings get org.gnome.desktop.interface color-scheme | grep 'dark'"
+      }
+    },
+    {
+      "type": "toggle",
+      "title": "Night Light",
+      "icon": "night-light-symbolic",
+      "command": {
+        "on": "gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true",
+        "off": "gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled false",
+        "monitor": "gsettings get org.gnome.settings-daemon.plugins.color night-light-enabled | grep 'true'"
+      }
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "type": "label",
+      "title": "-- Focus --"
+    },
+    {
+      "type": "toggle",
+      "title": "DND",
+      "icon": "notifications-disabled-symbolic",
+      "command": {
+        "on": "gsettings set org.gnome.desktop.notifications show-banners false",
+        "off": "gsettings set org.gnome.desktop.notifications show-banners true",
+        "monitor": "gsettings get org.gnome.desktop.notifications show-banners | grep 'false'"
+      }
+    },
+    {
+      "type": "toggle",
+      "title": "Animations",
+      "icon": "view-refresh-symbolic",
+      "command": {
+        "on": "gsettings set org.gnome.desktop.interface enable-animations true",
+        "off": "gsettings set org.gnome.desktop.interface enable-animations false",
+        "monitor": "gsettings get org.gnome.desktop.interface enable-animations | grep 'true'"
+      }
+    },
+    {
+      "type": "toggle",
+      "title": "Hot Corners",
+      "icon": "view-grid-symbolic",
+      "command": {
+        "on": "gsettings set org.gnome.desktop.interface enable-hot-corners true",
+        "off": "gsettings set org.gnome.desktop.interface enable-hot-corners false",
+        "monitor": "gsettings get org.gnome.desktop.interface enable-hot-corners | grep 'true'"
+      }
+    }
+  ]
+}

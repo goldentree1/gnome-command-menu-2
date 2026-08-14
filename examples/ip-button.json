@@ -1,0 +1,8 @@
+  {
+    "title": "$(nmcli -t -f NAME,TYPE con show --active | grep -q ':vpn$' && echo ' (VPN active)')",
+    "dynamicTitle": true,
+    "refreshInterval": 5,
+    "icon": "network-transmit-receive-symbolic",
+    "position": "left",
+    "type": "button"
+  }

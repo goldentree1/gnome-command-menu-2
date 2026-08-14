@@ -1,0 +1,37 @@
+{
+  "title": "$(date '+%a %b %d %H:%M:%S')",
+  "dynamicTitle": true,
+  "refreshInterval": 1,
+  "icon": "clock-symbolic",
+  "position": "center",
+  "menu": [
+    {
+      "type": "label",
+      "title": "$(date '+%a %b %d')",
+      "dynamicTitle": true,
+      "refreshInterval": 3
+    },
+    {
+      "type": "label",
+      "title": "$(date '+%H:%M')",
+      "dynamicTitle": true,
+      "refreshInterval": 3
+    },
+    {
+      "type": "label",
+      "title": "($(uptime -p))",
+      "dynamicTitle": true,
+      "refreshInterval": 30
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "title": "$(curl -s --max-time 10 'wttr.in/?format=3' || echo 'Weather unavailable')",
+      "dynamicTitle": true,
+      "refreshInterval": 30,
+      "icon": "external-link-symbolic",
+      "command": "xdg-open 'https://wttr.in/'"
+    }
+  ]
+}
