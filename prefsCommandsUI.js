@@ -32,6 +32,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         this.menus = menus;
         this._settings = settings;
         const menu = this.menus[this.menuIdx];
+        const isButton = menu.type === 'button';
 
         // save and apply changes button
         const settingsGroup0 = new Adw.PreferencesGroup();
@@ -48,7 +49,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         saveButton.set_child(saveBtnBox);
         saveButton.set_tooltip_text(_('Save and Reload'));
         saveButton.connect('clicked', () => {
-            menu.menu = this._listBoxToMenu();
+            if (!isButton) menu.menu = this._listBoxToMenu();
             try {
                 const json = JSON.stringify(this.menus, null, 2);
                 let filePath = this._settings.get_string('config-filepath');
@@ -184,6 +185,35 @@ export default class CommandsUI extends Adw.PreferencesPage {
         titleExpanderRow.add_row(indexActionRow);
         // dynamic bar title (always refreshes on a timer; off = static)
         this._addDynamicTitleRows(titleExpanderRow, menu, false);
+
+        // button mode: single command instead of menu items
+        const commandGroup = new Adw.PreferencesGroup({ title: _('Button Command') });
+        const commandBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+        const entryRowCommand = new Adw.EntryRow({
+            title: _('Command:'),
+            text: menu.command || '',
+            hexpand: true,
+        });
+        entryRowCommand.connect('notify::text', (entry) => {
+            menu.command = entry.get_text();
+        });
+        const chooseAppButton = new Gtk.Button({
+            label: _('Apps...'),
+            halign: Gtk.Align.END,
+            margin_bottom: 5,
+            margin_top: 5,
+            margin_start: 8,
+            margin_end: 8,
+        });
+        chooseAppButton.connect('clicked', () => {
+            const dialog = new CmdChooser(this.get_root(), (cli) => {
+                if (cli) entryRowCommand.set_text(cli);
+            });
+            dialog.present();
+        });
+        commandBox.append(entryRowCommand);
+        commandBox.append(chooseAppButton);
+        commandGroup.add(commandBox);
 
         // dragDropDescription & 'add' buttons
         const dragDropDescription = new Gtk.Label({
@@ -335,9 +365,14 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
         this.add(settingsGroup0);
         this.add(settingsGroup1);
-        this.add(settingsGroup2);
 
-        this._populateListBox(this.commandsListBox, 0, menu.menu);
+        if (isButton) {
+            // button mode: no item list, single command only
+            this.add(commandGroup);
+        } else {
+            this.add(settingsGroup2);
+            this._populateListBox(this.commandsListBox, 0, menu.menu);
+        }
     }
 
     _populateListBox(listBox, depth, items) {

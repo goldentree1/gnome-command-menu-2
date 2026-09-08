@@ -80,7 +80,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         if (
           json instanceof Array &&
           json.length &&
-          (json[0] instanceof Array || (json[0] instanceof Object && json[0]['menu'] instanceof Array))
+          (json[0] instanceof Array || (json[0] instanceof Object && (json[0]['menu'] instanceof Array || json[0].type === 'button')))
         ) {
           json.forEach(j => menus.push(parseMenu(j)));
         } else {
@@ -173,6 +173,8 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     function parseMenu(obj) {
       if (obj instanceof Object && obj.menu instanceof Array) {
         return { ...obj, menu: [...obj.menu] };
+      } else if (obj instanceof Object && obj.type === 'button') {
+        return { ...obj };
       } else if (obj instanceof Array) {
         return { menu: [...obj] };
       } else {
