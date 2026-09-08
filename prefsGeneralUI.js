@@ -195,6 +195,42 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         sourceFile: "examples/systemmenu.json",
         description: "Some system utilities and settings.",
       },
+      {
+        name: "Vibes Menu",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/vibesmenu.json",
+        description: "Display, focus and power toggles.",
+      },
+      {
+        name: "Wi-Fi Menu",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/wifi-menu.json",
+        description: "Wi-Fi toggle with live connection status in the title.",
+      },
+      {
+        name: "Power Menu",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/powermenu.json",
+        description: "Lock, suspend, restart and shut down.",
+      },
+      {
+        name: "Power Profiles",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/powerprofilesmenu.json",
+        description: "Switch power profiles on the fly.",
+      },
+      {
+        name: "Date & Time Menu",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/datetimemenu.json",
+        description: "Live clock with weather and uptime.",
+      },
+      {
+        name: "IP Button",
+        image: "icons/simplemenu.jpg",
+        sourceFile: "examples/ip-button.json",
+        description: "A button, not a menu: network status at a glance.",
+      },
     ];
     const templatesFlowBox = new Gtk.FlowBox({
       selection_mode: Gtk.SelectionMode.NONE,
