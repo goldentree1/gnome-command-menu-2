@@ -223,6 +223,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         gMenu.append(_('Add Menu Item'), 'addmenu.addCommand');
         gMenu.append(_('Add Separator'), 'addmenu.addSeparator');
         gMenu.append(_('Add Label'), 'addmenu.addLabel');
+        gMenu.append(_('Add Toggle'), 'addmenu.addToggle');
         gMenu.append(_('Add Submenu'), 'addmenu.addSubmenu');
 
         const addMenuButton = new Gtk.MenuButton({
@@ -262,6 +263,20 @@ export default class CommandsUI extends Adw.PreferencesPage {
             this._listBoxScrollToBottom();
         });
         addMenuActions.add_action(addLabelAction);
+
+        const addToggleAction = new Gio.SimpleAction({ name: 'addToggle' });
+        addToggleAction.connect('activate', () => {
+            this._populateListBox(this.commandsListBox, 0, [{
+                type: 'toggle',
+                title: 'New Toggle',
+                command: {
+                    on: 'notify-send "Toggle on"',
+                    off: 'notify-send "Toggle off"',
+                },
+            }]);
+            this._listBoxScrollToBottom();
+        });
+        addMenuActions.add_action(addToggleAction);
 
         const addSubmenuAction = new Gio.SimpleAction({ name: 'addSubmenu' });
         addSubmenuAction.connect('activate', () => {
@@ -414,6 +429,122 @@ export default class CommandsUI extends Adw.PreferencesPage {
 
                 row.add_row(entryRowTitle);
                 row.add_row(iconBox);
+            } else if (item.type === 'toggle') {
+                row.set_title(`<b>Toggle:</b> ${item.title || ''}`);
+
+                const entryRowTitle = new Adw.EntryRow({ title: _('Title:'), text: item.title || '' });
+                entryRowTitle.connect('notify::text', () => {
+                    item.title = entryRowTitle.text;
+                    row.set_title(`<b>Toggle:</b> ${item.title || ''}`);
+                });
+                row.add_row(entryRowTitle);
+
+                // icon editor
+                const iconBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                const entryRowIcon = new Adw.EntryRow({ title: _('Icon:'), text: item.icon || '', hexpand: true });
+                entryRowIcon.connect('notify::text', () => {
+                    item.icon = entryRowIcon.text;
+                    let icon = item.icon;
+                    row._iconWidget.visible = Boolean(icon);
+                    if (!icon) {
+                        row._iconWidget.clear();
+                    } else if (icon.startsWith('~/') || icon.startsWith('$HOME/'))
+                        icon = GLib.build_filenamev([GLib.get_home_dir(), icon.substring(icon.indexOf('/'))]);
+                    if (icon.includes('/')) {
+                        row._iconWidget.set_from_file(icon);
+                    } else {
+                        row._iconWidget.set_from_icon_name(icon);
+                    }
+                });
+                const findIconButton = new Gtk.Button({
+                    label: _('Icons...'),
+                    halign: Gtk.Align.END,
+                    margin_bottom: 5,
+                    margin_top: 5,
+                    margin_start: 8,
+                    margin_end: 8,
+                });
+                findIconButton.connect('clicked', () => {
+                    const dialog = new IconChooser(this.get_root(), (_ico) => {
+                        if (_ico) entryRowIcon.set_text(_ico);
+                    });
+                    dialog.present();
+                });
+                iconBox.append(entryRowIcon);
+                iconBox.append(findIconButton);
+                row.add_row(iconBox);
+
+                // command editors, keep the object shape
+                const entryRowCommandOn = new Adw.EntryRow({
+                    title: _('On command:'),
+                    text: item.command?.on || '',
+                    hexpand: true,
+                });
+                const entryRowCommandOff = new Adw.EntryRow({
+                    title: _('Off command:'),
+                    text: item.command?.off || '',
+                    hexpand: true,
+                });
+                const entryRowMonitor = new Adw.EntryRow({
+                    title: _('Monitor:'),
+                    text: item.command?.monitor || '',
+                    hexpand: true,
+                    tooltip_text: _('Command checked when the menu opens; non-empty output = toggle on'),
+                });
+
+                const syncCommand = () => {
+                    const on = entryRowCommandOn.get_text();
+                    const off = entryRowCommandOff.get_text();
+                    const monitor = entryRowMonitor.get_text();
+                    const command = {};
+                    if (on) command.on = on;
+                    if (off) command.off = off;
+                    if (monitor) command.monitor = monitor;
+                    item.command = (on || off || monitor) ? command : undefined;
+                };
+                entryRowCommandOn.connect('notify::text', syncCommand);
+                entryRowCommandOff.connect('notify::text', syncCommand);
+                entryRowMonitor.connect('notify::text', syncCommand);
+
+                const onBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                const chooseOnButton = new Gtk.Button({
+                    label: _('Apps...'),
+                    halign: Gtk.Align.END,
+                    margin_bottom: 5,
+                    margin_top: 5,
+                    margin_start: 8,
+                    margin_end: 8,
+                });
+                chooseOnButton.connect('clicked', () => {
+                    const dialog = new CmdChooser(this.get_root(), (cli) => {
+                        if (cli) entryRowCommandOn.set_text(cli);
+                    });
+                    dialog.present();
+                });
+                onBox.append(entryRowCommandOn);
+                onBox.append(chooseOnButton);
+
+                const offBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
+                const chooseOffButton = new Gtk.Button({
+                    label: _('Apps...'),
+                    halign: Gtk.Align.END,
+                    margin_bottom: 5,
+                    margin_top: 5,
+                    margin_start: 8,
+                    margin_end: 8,
+                });
+                chooseOffButton.connect('clicked', () => {
+                    const dialog = new CmdChooser(this.get_root(), (cli) => {
+                        if (cli) entryRowCommandOff.set_text(cli);
+                    });
+                    dialog.present();
+                });
+                offBox.append(entryRowCommandOff);
+                offBox.append(chooseOffButton);
+
+                row.add_row(onBox);
+                row.add_row(offBox);
+                row.add_row(entryRowMonitor);
             } else if (item.command) {
                 row.set_title(item.title || _('Untitled'));
 
