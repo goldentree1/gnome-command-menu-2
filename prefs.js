@@ -126,8 +126,8 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     function refreshMenuEditorPages() {
       menuEditorPages.forEach(p => window.remove(p));
       menuEditorPages = menus.map((m, i) => new CommandsUI({
-        title: gettext(`Menu ${i + 1}`),
-        icon_name: 'document-edit-symbolic',
+        title: gettext(m.type === 'button' ? `Button ${i + 1}` : `Menu ${i + 1}`),
+        icon_name: m.type === 'button' ? 'input-mouse-symbolic' : 'document-edit-symbolic',
         menus: menus,
         menuIdx: i,
         settings: settings,

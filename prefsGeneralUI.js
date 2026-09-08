@@ -113,10 +113,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     // 'Your Menus' section
     const group2 = new Adw.PreferencesGroup({ title: gettext("Your Menus:") });
-    const addMenuButton = new Gtk.Button({
+    const addButtonsBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
       margin_bottom: 6,
-      halign: Gtk.Align.START
+      halign: Gtk.Align.START,
     });
+    const addMenuButton = new Gtk.Button({ halign: Gtk.Align.START });
     const icon = Gtk.Image.new_from_icon_name('document-new-symbolic');
     const label = new Gtk.Label({ label: gettext("Add Menu") });
     const buttonBox = new Gtk.Box({
@@ -128,12 +131,35 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     addMenuButton.set_child(buttonBox);
     addMenuButton.set_tooltip_text(gettext("Create a new empty menu"));
     addMenuButton.connect("clicked", () => { addMenu(); });
+
+    const addButtonButton = new Gtk.Button({ halign: Gtk.Align.START });
+    const buttonIcon = Gtk.Image.new_from_icon_name('input-mouse-symbolic');
+    const buttonLabel = new Gtk.Label({ label: gettext("Add Button") });
+    const addButtonBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+    });
+    addButtonBox.append(buttonIcon);
+    addButtonBox.append(buttonLabel);
+    addButtonButton.set_child(addButtonBox);
+    addButtonButton.set_tooltip_text(gettext("Create a new button (single click action, no menu)"));
+    addButtonButton.connect("clicked", () => {
+      addMenu({
+        type: 'button',
+        title: `Button ${this._menus.length + 1}`,
+        icon: 'input-mouse-symbolic',
+        position: 'left',
+      });
+    });
+    addButtonsBox.append(addMenuButton);
+    addButtonsBox.append(addButtonButton);
+
     this._listBox = new Gtk.ListBox({
       selection_mode: Gtk.SelectionMode.NONE,
     });
     this._listBox.add_css_class('boxed-list');
     this.updateMenus();
-    group2.add(addMenuButton);
+    group2.add(addButtonsBox);
     group2.add(this._listBox);
 
     // 'Templates' section
@@ -253,6 +279,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     for (let i = 0; i < this._menus.length; i++) {
       const menu = this._menus[i];
+      const isButton = menu.type === 'button';
       const row = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
         spacing: 12,
@@ -265,11 +292,11 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
       // label
       const menuLabel = new Gtk.Label({
-        label: `<b>Menu ${i + 1}:</b>`,
+        label: `<b>${isButton ? 'Button' : 'Menu'} ${i + 1}:</b>`,
         use_markup: true
       });
 
-      let icon = menu.icon || '';
+      let icon = menu.icon || (isButton ? 'input-mouse-symbolic' : '');
       let iconWidget = new Gtk.Image();
       iconWidget.add_css_class('dim-label');
       if (icon?.startsWith('~/') || icon.startsWith('$HOME/'))
@@ -339,7 +366,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
           transient_for: this.get_root(),
           message_type: Gtk.MessageType.QUESTION,
           buttons: Gtk.ButtonsType.OK_CANCEL,
-          text: `Are you sure you want to remove 'Menu ${i + 1}'?`,
+          text: `Are you sure you want to remove '${isButton ? 'Button' : 'Menu'} ${i + 1}'?`,
         });
         dialog.connect("response", (d, res) => {
           if (res === Gtk.ResponseType.OK) this._removeMenu(i);
@@ -376,7 +403,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       editBox.append(editLabel);
       const editButton = new Gtk.Button({ valign: Gtk.Align.CENTER });
       editButton.set_child(editBox);
-      editButton.set_tooltip_text(gettext(`Go to editor for 'Menu ${i + 1}'`));
+      editButton.set_tooltip_text(gettext(`Go to editor for '${isButton ? 'Button' : 'Menu'} ${i + 1}'`));
       editButton.connect('clicked', () => this._showMenuEditor(i));
       row.append(editButton);
 
