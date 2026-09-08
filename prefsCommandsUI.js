@@ -182,6 +182,8 @@ export default class CommandsUI extends Adw.PreferencesPage {
         titleExpanderRow.add_row(iconBox);
         titleExpanderRow.add_row(positionComboRow);
         titleExpanderRow.add_row(indexActionRow);
+        // dynamic bar title (always refreshes on a timer; off = static)
+        this._addDynamicTitleRows(titleExpanderRow, menu, false);
 
         // dragDropDescription & 'add' buttons
         const dragDropDescription = new Gtk.Label({
@@ -580,17 +582,19 @@ export default class CommandsUI extends Adw.PreferencesPage {
         }
     }
 
-    // dynamic title: switch + optional auto-refresh interval
-    _addDynamicTitleRows(row, item) {
-        const isDynamic = item.dynamicTitle === true;
-        const interval = Number(item.refreshInterval);
+    // dynamic title: switch + interval; auto-refresh toggle only for menu items
+    _addDynamicTitleRows(row, obj, autoRefreshable = true) {
+        const isDynamic = obj.dynamicTitle === true;
+        const interval = Number(obj.refreshInterval);
         const hasInterval = !Number.isNaN(interval);
         const autoRefresh = isDynamic ? (!hasInterval || interval > 0) : true;
 
         const titleSwitch = new Gtk.Switch({ active: isDynamic, valign: Gtk.Align.CENTER });
         const titleRow = new Adw.ActionRow({
             title: _('Dynamic title'),
-            subtitle: _('Resolve $(...) in the title when the menu opens'),
+            subtitle: autoRefreshable
+                ? _('Resolve $(...) in the title when the menu opens')
+                : _('Resolve $(...) in the title on a timer'),
         });
         titleRow.add_suffix(titleSwitch);
         titleRow.set_activatable_widget(titleSwitch);
@@ -614,36 +618,46 @@ export default class CommandsUI extends Adw.PreferencesPage {
         });
 
         row.add_row(titleRow);
-        row.add_row(refreshRow);
+        if (autoRefreshable) row.add_row(refreshRow);
         row.add_row(spinRow);
 
         const sync = () => {
-            refreshRow.set_visible(titleSwitch.get_active());
-            spinRow.set_visible(titleSwitch.get_active() && refreshSwitch.get_active());
+            if (autoRefreshable) {
+                refreshRow.set_visible(titleSwitch.get_active());
+                spinRow.set_visible(titleSwitch.get_active() && refreshSwitch.get_active());
+            } else {
+                spinRow.set_visible(titleSwitch.get_active());
+            }
         };
 
         titleSwitch.connect('notify::active', sw => {
             if (sw.get_active()) {
-                item.dynamicTitle = true;
-                if (refreshSwitch.get_active())
-                    item.refreshInterval = Math.round(spinRow.get_value());
+                obj.dynamicTitle = true;
+                if (!autoRefreshable || refreshSwitch.get_active())
+                    obj.refreshInterval = Math.round(spinRow.get_value());
             } else {
-                delete item.dynamicTitle;
-                delete item.refreshInterval;
+                delete obj.dynamicTitle;
+                delete obj.refreshInterval;
             }
             sync();
         });
-        refreshSwitch.connect('notify::active', sw => {
-            if (sw.get_active())
-                item.refreshInterval = Math.round(spinRow.get_value());
-            else
-                delete item.refreshInterval;
-            sync();
-        });
-        spinRow.connect('notify::value', () => {
-            if (refreshSwitch.get_active())
-                item.refreshInterval = Math.round(spinRow.get_value());
-        });
+        if (autoRefreshable) {
+            refreshSwitch.connect('notify::active', sw => {
+                if (sw.get_active())
+                    obj.refreshInterval = Math.round(spinRow.get_value());
+                else
+                    delete obj.refreshInterval;
+                sync();
+            });
+            spinRow.connect('notify::value', () => {
+                if (refreshSwitch.get_active())
+                    obj.refreshInterval = Math.round(spinRow.get_value());
+            });
+        } else {
+            spinRow.connect('notify::value', () => {
+                obj.refreshInterval = Math.round(spinRow.get_value());
+            });
+        }
 
         sync();
     }
