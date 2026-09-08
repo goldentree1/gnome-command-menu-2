@@ -488,6 +488,9 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 row.add_row(commandBox);
             }
 
+            // dynamic title controls (separators have no title to resolve)
+            if (item.type !== 'separator') this._addDynamicTitleRows(row, item);
+
             // menu button (add/delete)
             const gMenu = new Gio.Menu();
             gMenu.append(_('Duplicate'), 'row.duplicate');
@@ -577,6 +580,74 @@ export default class CommandsUI extends Adw.PreferencesPage {
         }
     }
 
+    // dynamic title: switch + optional auto-refresh interval
+    _addDynamicTitleRows(row, item) {
+        const isDynamic = item.dynamicTitle === true;
+        const interval = Number(item.refreshInterval);
+        const hasInterval = !Number.isNaN(interval);
+        const autoRefresh = isDynamic ? (!hasInterval || interval > 0) : true;
+
+        const titleSwitch = new Gtk.Switch({ active: isDynamic, valign: Gtk.Align.CENTER });
+        const titleRow = new Adw.ActionRow({
+            title: _('Dynamic title'),
+            subtitle: _('Resolve $(...) in the title when the menu opens'),
+        });
+        titleRow.add_suffix(titleSwitch);
+        titleRow.set_activatable_widget(titleSwitch);
+
+        const refreshSwitch = new Gtk.Switch({ active: autoRefresh, valign: Gtk.Align.CENTER });
+        const refreshRow = new Adw.ActionRow({
+            title: _('Auto-refresh'),
+            subtitle: _('Periodic re-run while the menu is open'),
+        });
+        refreshRow.add_suffix(refreshSwitch);
+        refreshRow.set_activatable_widget(refreshSwitch);
+
+        const spinRow = new Adw.SpinRow({
+            title: _('Interval (seconds)'),
+            adjustment: new Gtk.Adjustment({
+                lower: 1,
+                upper: 3600,
+                step_increment: 1,
+                value: hasInterval && interval > 0 ? Math.min(interval, 3600) : 30,
+            }),
+        });
+
+        row.add_row(titleRow);
+        row.add_row(refreshRow);
+        row.add_row(spinRow);
+
+        const sync = () => {
+            refreshRow.set_visible(titleSwitch.get_active());
+            spinRow.set_visible(titleSwitch.get_active() && refreshSwitch.get_active());
+        };
+
+        titleSwitch.connect('notify::active', sw => {
+            if (sw.get_active()) {
+                item.dynamicTitle = true;
+                if (refreshSwitch.get_active())
+                    item.refreshInterval = Math.round(spinRow.get_value());
+            } else {
+                delete item.dynamicTitle;
+                delete item.refreshInterval;
+            }
+            sync();
+        });
+        refreshSwitch.connect('notify::active', sw => {
+            if (sw.get_active())
+                item.refreshInterval = Math.round(spinRow.get_value());
+            else
+                delete item.refreshInterval;
+            sync();
+        });
+        spinRow.connect('notify::value', () => {
+            if (refreshSwitch.get_active())
+                item.refreshInterval = Math.round(spinRow.get_value());
+        });
+
+        sync();
+    }
+
     /** 
      * Listbox doesnt support nesting, but we've done it by adding _depth var to list.
      * This converts list's depth-based menu to the .commands.json menu
@@ -595,6 +666,9 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 icon: item.icon || undefined,
                 command: item.command || '',
             };
+            // keep fields the rows don't edit
+            if (item.dynamicTitle !== undefined) newItem.dynamicTitle = item.dynamicTitle;
+            if (item.refreshInterval !== undefined) newItem.refreshInterval = item.refreshInterval;
 
             // submenu
             while (stack.length > 1 && depth <= stack[stack.length - 1].depth) {
