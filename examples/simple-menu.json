@@ -1,0 +1,20 @@
+{
+    "icon": "utilities-terminal-symbolic",
+    "menu": [
+        {
+            "title": "Firefox",
+            "command": "firefox",
+            "icon": "web-browser-symbolic"
+        },
+        {
+            "title": "Files",
+            "command": "nautilus",
+            "icon": "folder"
+        },
+        {
+            "title": "Terminal",
+            "command": "kgx",
+            "icon": "utilities-terminal"
+        }
+    ]
+}

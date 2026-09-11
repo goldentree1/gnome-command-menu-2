@@ -1,0 +1,180 @@
+{
+    "title": "Menu",
+    "icon": "~/.local/share/gnome-shell/extensions/command-menu2@goldentree1.github.com/icons/penguin.svg",
+    "position": "center",
+    "index": "auto",
+    "menu": [
+        {
+            "type": "label",
+            "title": "$(whoami)@$(hostname)",
+            "dynamicTitle": true
+        },
+        {
+            "type": "label",
+            "title": "Uptime: $(uptime -p | sed 's/^up //')",
+            "dynamicTitle": true,
+            "refreshInterval": 10
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Terminal",
+            "command": "gnome-terminal",
+            "icon": "utilities-terminal-symbolic"
+        },
+        {
+            "title": "Web Browser",
+            "command": "xdg-open https://",
+            "icon": "web-browser-symbolic"
+        },
+        {
+            "title": "Places",
+            "icon": "folder-symbolic",
+            "type": "submenu",
+            "submenu": [
+                {
+                    "title": "Home",
+                    "command": "xdg-open \"$HOME\"",
+                    "icon": "user-home-symbolic"
+                },
+                {
+                    "title": "Downloads",
+                    "command": "xdg-open \"$HOME/Downloads\"",
+                    "icon": "folder-download-symbolic"
+                },
+                {
+                    "title": "Documents",
+                    "command": "xdg-open \"$HOME/Documents\"",
+                    "icon": "folder-documents-symbolic"
+                },
+                {
+                    "title": "Pictures",
+                    "command": "xdg-open \"$HOME/Pictures\"",
+                    "icon": "folder-pictures-symbolic"
+                },
+                {
+                    "title": "Music",
+                    "command": "xdg-open \"$HOME/Music\"",
+                    "icon": "folder-music-symbolic"
+                },
+                {
+                    "title": "Videos",
+                    "command": "xdg-open \"$HOME/Videos\"",
+                    "icon": "folder-videos-symbolic"
+                }
+            ]
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "type": "label",
+            "title": "Quick Settings"
+        },
+        {
+            "type": "toggle",
+            "title": "Wi-Fi",
+            "icon": "network-wireless-symbolic",
+            "command": {
+                "on": "nmcli radio wifi on",
+                "off": "nmcli radio wifi off",
+                "monitor": "nmcli radio wifi | grep '^enabled'"
+            }
+        },
+        {
+            "type": "toggle",
+            "title": "Bluetooth",
+            "icon": "bluetooth-active-symbolic",
+            "command": {
+                "on": "bluetoothctl power on",
+                "off": "bluetoothctl power off",
+                "monitor": "bluetoothctl show | grep 'Powered: yes'"
+            }
+        },
+        {
+            "title": "Appearance",
+            "icon": "preferences-desktop-theme-symbolic",
+            "type": "submenu",
+            "submenu": [
+                {
+                    "title": "Dark Mode",
+                    "icon": "weather-clear-night-symbolic",
+                    "type": "toggle",
+                    "command": {
+                        "on": "gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'",
+                        "off": "gsettings set org.gnome.desktop.interface color-scheme 'default'",
+                        "monitor": "gsettings get org.gnome.desktop.interface color-scheme | grep 'dark'"
+                    }
+                },
+                {
+                    "title": "Night Light",
+                    "icon": "night-light-symbolic",
+                    "type": "toggle",
+                    "command": {
+                        "on": "gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true",
+                        "off": "gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled false",
+                        "monitor": "gsettings get org.gnome.settings-daemon.plugins.color night-light-enabled | grep 'true'"
+                    }
+                },
+                {
+                    "title": "Animations",
+                    "icon": "view-refresh-symbolic",
+                    "type": "toggle",
+                    "command": {
+                        "on": "gsettings set org.gnome.desktop.interface enable-animations true",
+                        "off": "gsettings set org.gnome.desktop.interface enable-animations false",
+                        "monitor": "gsettings get org.gnome.desktop.interface enable-animations | grep 'true'"
+                    }
+                },
+                {
+                    "title": "Hot Corners",
+                    "icon": "view-grid-symbolic",
+                    "type": "toggle",
+                    "command": {
+                        "on": "gsettings set org.gnome.desktop.interface enable-hot-corners true",
+                        "off": "gsettings set org.gnome.desktop.interface enable-hot-corners false",
+                        "monitor": "gsettings get org.gnome.desktop.interface enable-hot-corners | grep 'true'"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "More Settings...",
+            "command": "gnome-control-center"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "type": "label",
+            "title": "Power"
+        },
+        {
+            "title": "Lock Screen",
+            "icon": "system-lock-screen-symbolic",
+            "command": "gnome-screensaver-command -l"
+        },
+        {
+            "title": "Suspend",
+            "icon": "media-playback-pause-symbolic",
+            "command": "systemctl suspend"
+        },
+        {
+            "title": "Restart",
+            "icon": "system-reboot-symbolic",
+            "command": "gnome-session-quit --reboot"
+        },
+        {
+            "title": "Shut Down",
+            "icon": "system-shutdown-symbolic",
+            "command": "gnome-session-quit --power-off"
+        },
+        {
+            "title": "Log Out $(whoami)...",
+            "dynamicTitle": true,
+            "icon": "system-log-out-symbolic",
+            "command": "gnome-session-quit --logout"
+        }
+    ]
+}

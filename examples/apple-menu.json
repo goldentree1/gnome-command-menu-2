@@ -1,0 +1,56 @@
+{
+    "icon": "~/.local/share/gnome-shell/extensions/command-menu2@goldentree1.github.com/icons/apple.svg",
+    "position": "left",
+    "index": 0,
+    "menu": [
+        {
+            "title": "About This Linux",
+            "command": "notify-send --app-name=\"About This Linux\" \"$(lsb_release -ds) (Linux $(uname -r))\" \"$(lscpu | grep 'Model name' | cut -d: -f2 | xargs)  |  $(free -h | grep Mem | tr -s ' ' | cut -d' ' -f2) RAM  |  $(uname -m)\""
+        },
+	      {
+            "type": "separator"
+        },
+        {
+            "title": "System Settings...",
+            "command": "gnome-control-center"
+        },
+        {
+            "title": "App Store...",
+            "command": "if [ -z \"$(which gnome-software)\" ]; then snap-store; else gnome-software; fi"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Force Quit...",
+            "command": "gnome-system-monitor"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Sleep",
+            "command": "systemctl suspend"
+        },
+        {
+            "title": "Restart...",
+            "command": "gnome-session-quit --reboot"
+        },
+        {
+            "title": "Shut Down...",
+            "command": "gnome-session-quit --power-off"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Lock Screen",
+            "command": "xdg-screensaver lock"
+        },
+        {
+          "title": "Log Out $(whoami)...",
+          "dynamicTitle": true,
+          "command": "gnome-session-quit --logout"
+        }
+    ]
+}

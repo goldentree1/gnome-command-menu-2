@@ -1,0 +1,7 @@
+{
+    "title": "IP: $(curl -s --max-time 4 api.ipify.org || echo '<disconnected>')",
+    "dynamicTitle": true,
+    "refreshInterval": 15,
+    "position": "left",
+    "type": "button"
+}

@@ -1,0 +1,61 @@
+{
+    "title": "System Stats",
+    "icon": "utilities-system-monitor-symbolic",
+    "position": "left",
+    "menu": [
+        {
+            "type": "label",
+            "title": "CPU: $(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' )% used",
+            "dynamicTitle": true,
+            "refreshInterval": 3
+        },
+        {
+            "type": "label",
+            "title": "RAM: $(free -h | grep Mem | tr -s ' ' | cut -d' ' -f3)/$(free -h | grep Mem | tr -s ' ' | cut -d' ' -f2)",
+            "dynamicTitle": true,
+            "refreshInterval": 3
+        },
+        {
+            "type": "label",
+            "title": "Swap: $(free -h | grep Swap | tr -s ' ' | cut -d' ' -f3)/$(free -h | grep Swap | tr -s ' ' | cut -d' ' -f2)",
+            "dynamicTitle": true,
+            "refreshInterval": 3
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "type": "label",
+            "title": "Load: $(cat /proc/loadavg | cut -d' ' -f1-3)",
+            "dynamicTitle": true,
+            "refreshInterval": 5
+        },
+        {
+            "type": "label",
+            "title": "Processes: $(ps ax | wc -l)",
+            "dynamicTitle": true,
+            "refreshInterval": 5
+        },
+        {
+            "type": "label",
+            "title": "Uptime: $(uptime -p | sed 's/^up //')",
+            "dynamicTitle": true,
+            "refreshInterval": 60
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "type": "label",
+            "title": "Kernel: $(uname -r)",
+            "dynamicTitle": true,
+            "refreshInterval": 60
+        },
+        {
+            "type": "label",
+            "title": "Disk: $(df -h / | tail -1 | tr -s ' ' | cut -d' ' -f3)/$(df -h / | tail -1 | tr -s ' ' | cut -d' ' -f2)",
+            "dynamicTitle": true,
+            "refreshInterval": 10
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+{
+  "title": "Files",
+  "position": "center",
+  "menu": [
+    {
+      "title": "Documents",
+      "command": "xdg-open ~/Documents",
+      "icon": "folder-documents-symbolic"
+    },
+    {
+      "title": "Downloads",
+      "command": "xdg-open ~/Downloads",
+      "icon": "folder-download-symbolic"
+    },
+    {
+      "title": "Pictures",
+      "command": "xdg-open ~/Pictures",
+      "icon": "folder-pictures-symbolic"
+    },
+    {
+      "title": "Music",
+      "command": "xdg-open ~/Music",
+      "icon": "folder-music-symbolic"
+    },
+    {
+      "title": "Videos",
+      "command": "xdg-open ~/Videos",
+      "icon": "folder-videos-symbolic"
+    },
+    {
+      "type": "separator"
+    },
+    {
+      "title": "File System",
+      "command": "xdg-open /",
+      "icon": "drive-harddisk-symbolic"
+    }
+  ]
+}
