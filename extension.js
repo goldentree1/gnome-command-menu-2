@@ -66,21 +66,27 @@ const CommandMenuToggleItem = GObject.registerClass(
 
       this._toggleUpdate = false;
 
+      // we need this guard due to async (item may be gone by time cmd finishes, etc.)
+      let destroyed = false;
+      this.connect('destroy', () => {
+        destroyed = true;
+      });
+
       if (cmd.icon) {
         const icon = popup.loadIcon(cmd.icon, 'popup-menu-icon');
         if (icon) this.insert_child_at_index(icon, 0);
       }
 
       const { on, off, monitor } = cmd.command || {};
-      popup.connectSignal(this, 'toggled', (_, state) => {
+      this.connect('toggled', (_, state) => {
         if (this._toggleUpdate) return;
         if (state && on) popup.runCommand(on);
         else if (!state && off) popup.runCommand(off);
       });
 
       if (monitor) {
-        popup.connectSignal(parentMenu, 'open-state-changed', (_menu, open) => {
-          if (!open) return;
+        parentMenu.connect('open-state-changed', (_menu, open) => {
+          if (!open || destroyed) return;
           try {
             const proc = Gio.Subprocess.new(
               ['bash', '-lc', monitor],
@@ -88,6 +94,8 @@ const CommandMenuToggleItem = GObject.registerClass(
             );
             proc.communicate_utf8_async(null, null)
               .then(([stdout]) => {
+                if (destroyed) return;
+
                 const monitorState = (stdout ?? '').trim().length > 0;
                 if (this.state !== monitorState) {
                   this._toggleUpdate = true;
@@ -95,9 +103,13 @@ const CommandMenuToggleItem = GObject.registerClass(
                   this._toggleUpdate = false;
                 }
               })
-              .catch(e => logError(e, `${popup.uuid}: toggle monitor failed: "${monitor}"`));
+              .catch(e => {
+                if (!destroyed)
+                  logError(e, `${popup.uuid}: toggle monitor failed: "${monitor}"`);
+              });
           } catch (e) {
-            logError(e, `${popup.uuid}: toggle monitor failed: "${monitor}"`);
+            if (!destroyed)
+              logError(e, `${popup.uuid}: toggle monitor failed: "${monitor}"`);
           }
         });
       }
@@ -126,14 +138,11 @@ const CommandMenuPopup = GObject.registerClass(
       this.commandMenuSettings = settings;
       this.uuid = uuid;
       this._dynamicLabels = [];
-      this._signalIds = [];
       this._timerIds = [];
 
       this.connect('destroy', () => {
         this._timerIds.forEach(id => GLib.source_remove(id));
         this._timerIds = [];
-        this._signalIds.forEach(([obj, id]) => obj.disconnect(id));
-        this._signalIds = [];
         this._dynamicLabels = [];
       });
 
@@ -159,8 +168,16 @@ const CommandMenuPopup = GObject.registerClass(
     }
 
     async _asyncResolveDynamicTitle(label, template) {
+      // we need this guard due to async (item may be gone by time cmd finishes, etc.)
+      let destroyed = false;
+      const destroyId = label.connect('destroy', () => {
+        destroyed = true;
+      });
+
       if (typeof template !== 'string' || !template.includes('$(')) {
-        label.text = template;
+        if (!destroyed)
+          label.text = template;
+        label.disconnect(destroyId);
         return;
       }
 
@@ -171,18 +188,23 @@ const CommandMenuPopup = GObject.registerClass(
           Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_SILENCE,
         );
         const [stdout] = await proc.communicate_utf8_async(null, null);
-        label.text = stdout || '';
+        if (!destroyed)
+          label.text = stdout || '';
       } catch (e) {
-        logError(e, `${this.uuid}: resolving dynamic title failed`);
+        if (!destroyed)
+          logError(e, `${this.uuid}: resolving dynamic title failed`);
       }
+
+      if (!destroyed)
+        label.disconnect(destroyId);
     }
 
     registerDynamicTitle(label, template, refreshInterval, parentMenu) {
       const entry = { label, template, sourceId: 0 };
 
-      let interval = Number(refreshInterval);
-      if (isNaN(interval)) interval = 30;
-      if (interval < 1) interval = 1;
+      const interval = (typeof refreshInterval === 'number' && Number.isFinite(refreshInterval)) ?
+        Math.max(1, refreshInterval)
+        : null;
 
       this._dynamicLabels.push(entry);
 
@@ -191,19 +213,16 @@ const CommandMenuPopup = GObject.registerClass(
         this._startTimer(entry, interval, () => this._asyncResolveDynamicTitle(label, template));
       } else {
         // refresh only while parent menu is open
-        this.connectSignal(parentMenu, 'open-state-changed', (_menu, open) => {
+        parentMenu.connect('open-state-changed', (_menu, open) => {
           if (open) {
             this._asyncResolveDynamicTitle(label, template);
-            this._startTimer(entry, interval, () => this._asyncResolveDynamicTitle(label, template));
-          } else this._stopTimer(entry);
+            if (interval)
+              this._startTimer(entry, interval, () => this._asyncResolveDynamicTitle(label, template));
+          } else {
+            this._stopTimer(entry); // has sourceId: 0 unless _startTimer works, which is guarded
+          }
         })
       }
-    }
-
-    connectSignal(obj, signal, cb) {
-      const id = obj.connect(signal, cb);
-      this._signalIds.push([obj, id]);
-      return id;
     }
 
     loadIcon(icon, style_class) {
