@@ -10,10 +10,20 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
     window.set_default_size(750, 850);
 
     const settings = this.getSettings();
-    const menus = [];
+    const menus = loadConfig();
     let menuEditorPages = [];
 
-    loadConfig();
+    const defaultMenu = (len=0) => {
+      return {
+        title: `Menu ${len + 1}`,
+        icon: "utilities-terminal-symbolic",
+        menu: [{
+          title: "Customize this menu...",
+          icon: "preferences-system-symbolic",
+          command: "gnome-extensions prefs command-menu2@goldentree1.github.com",
+        }],
+      };
+    };
 
     const generalPage = new GeneralPreferencesPage({
       title: gettext('General'),
@@ -22,15 +32,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       settings: settings,
       addMenu: (template = null) => {
         mutateMenus(m => {
-          const addMe = template || {
-            title: `Menu ${m.length + 1}`,
-            icon: "utilities-terminal-symbolic",
-            menu: [{
-              title: "Customize this menu...",
-              icon: "preferences-system-symbolic",
-              command: "gnome-extensions prefs command-menu2@goldentree1.github.com",
-            }]
-          };
+          const addMe = template || defaultMenu(m.length);
           m.push(addMe);
         });
       },
@@ -54,16 +56,17 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       showMenuEditor: (idx) => {
         window.set_visible_page(menuEditorPages[idx]);
       },
+      parseMenus: (json) => parseMenus(json),
       refreshConfig: () => {
         mutateMenus(m => {
           m.length = 0;
-          loadConfig();
+          m.push(...loadConfig());
         }, false);
       }
     });
 
     window.add(generalPage);
-    if (menus.length) refreshMenuEditorPages();
+    refreshMenuEditorPages();
     window.set_visible_page(generalPage);
 
     function loadConfig() {
@@ -74,7 +77,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
 
       if (!file.query_exists(null)) {
         try {
-          GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]));
+          GLib.file_set_contents(filePath, JSON.stringify(defaultMenu()));
         } catch (err) {
           logError(err, 'Failed to create default configuration file');
         }
@@ -85,18 +88,27 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         if (!ok) throw Error();
         const decoder = new TextDecoder();
         const json = JSON.parse(decoder.decode(contents));
-        if (
-          json instanceof Array &&
-          json.length &&
-          (json[0] instanceof Array || (json[0] instanceof Object && (json[0]['menu'] instanceof Array || json[0].type === 'button')))
-        ) {
-          json.forEach(j => menus.push(parseMenu(j)));
-        } else {
-          menus.push(parseMenu(json));
-        }
+        return parseMenus(json);
       } catch (e) {
         showConfigErrorDialog();
+        return [];
       }
+    }
+
+    function parseMenus(json) {
+      let normalised = (json instanceof Array && json.length && (json[0] instanceof Array || (json[0] instanceof Object && (json[0].menu instanceof Array || json[0].type === 'button'))))
+        ? json : [json];
+      return normalised.map(obj => {
+        if (obj instanceof Object && obj.menu instanceof Array) { // object menu
+          return { ...obj, menu: [...obj.menu] };
+        } else if (obj instanceof Object && obj.type === 'button') { // button-only
+          return { ...obj };
+        } else if (obj instanceof Array) { // simple array menu
+          return { menu: [...obj] };
+        } else {
+          return { menu: [] };
+        }
+      });
     }
 
     function mutateMenus(mutateFn, saveToConfig = true) {
@@ -156,7 +168,7 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         if (response === Gtk.ResponseType.YES) {
           try {
             const filePath = settings.get_string('config-filepath');
-            GLib.file_set_contents(filePath, JSON.stringify([{ icon: "utilities-terminal-symbolic", menu: [] }]), -1);
+            GLib.file_set_contents(filePath, JSON.stringify(defaultMenu()));
             d.destroy();
             refreshExtension();
             const restartDialog = new Gtk.MessageDialog({
@@ -176,18 +188,6 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
         d.destroy();
       });
       dialog.show();
-    }
-
-    function parseMenu(obj) {
-      if (obj instanceof Object && obj.menu instanceof Array) {
-        return { ...obj, menu: [...obj.menu] };
-      } else if (obj instanceof Object && obj.type === 'button') {
-        return { ...obj };
-      } else if (obj instanceof Array) {
-        return { menu: [...obj] };
-      } else {
-        return { menu: [] };
-      }
     }
   }
 }

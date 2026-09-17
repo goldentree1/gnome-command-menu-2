@@ -14,7 +14,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
   }
 
   _init(params = {}) {
-    const { menus, addMenu, duplicateMenu, removeMenu, moveMenu, showMenuEditor, refreshConfig, settings, ...args } = params;
+    const { menus, addMenu, duplicateMenu, removeMenu, moveMenu, showMenuEditor, parseMenus, refreshConfig, settings, ...args } = params;
     super._init(args);
 
     this._menus = menus;
@@ -179,7 +179,156 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     });
     editManuallyBox.append(changeConfigFilepathBtn);
 
+    // import / export configuration buttons
+    const importExportBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+      halign: Gtk.Align.START,
+      margin_top: 6,
+    });
+
+    const importConfigBtn = new Gtk.Button();
+    const importIcon = Gtk.Image.new_from_icon_name('document-open-symbolic');
+    const importLabel = new Gtk.Label({ label: gettext('Import') });
+    const importButtonBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+    });
+    importButtonBox.append(importIcon);
+    importButtonBox.append(importLabel);
+    importConfigBtn.set_child(importButtonBox);
+    importConfigBtn.set_tooltip_text(gettext("Import a configuration"));
+    importConfigBtn.connect('clicked', () => {
+      const dialog = new Gtk.FileChooserDialog({
+        title: gettext("Import A Configuration File"),
+        action: Gtk.FileChooserAction.OPEN,
+        transient_for: this.get_root(),
+        modal: true,
+      });
+      dialog.add_button("_Cancel", Gtk.ResponseType.CANCEL);
+      dialog.add_button("_Import", Gtk.ResponseType.OK);
+      dialog.connect('response', (dlg, response) => {
+        if (response !== Gtk.ResponseType.OK) {
+          dlg.destroy();
+          return;
+        }
+        const file = dlg.get_file();
+        const path = file.get_path();
+        let importedMenus;
+        try {
+          const contents = GLib.file_get_contents(path)[1];
+          const decoder = new TextDecoder();
+          importedMenus = parseMenus(JSON.parse(decoder.decode(contents)));
+        } catch (e) {
+          const errorDialog = new Gtk.MessageDialog({
+            modal: true,
+            transient_for: this.get_root(),
+            message_type: Gtk.MessageType.ERROR,
+            buttons: Gtk.ButtonsType.OK,
+            text: gettext("Could not import configuration."),
+            secondary_text: e.message,
+          });
+          errorDialog.connect('response', d => d.destroy());
+          errorDialog.show();
+          dlg.destroy();
+          return;
+        }
+        dlg.destroy();
+
+        const confirmDialog = new Gtk.MessageDialog({
+          modal: true,
+          transient_for: this.get_root(),
+          message_type: Gtk.MessageType.QUESTION,
+          buttons: Gtk.ButtonsType.OK_CANCEL,
+          text: gettext("Import this configuration?"),
+          secondary_text: gettext(
+            "This will replace your current menus with the imported configuration."
+          ),
+        });
+        confirmDialog.connect('response', (confirmDlg, confirmResponse) => {
+          if (confirmResponse === Gtk.ResponseType.OK) {
+            try {
+              let currentPath = this._settings.get_string('config-filepath');
+              if (currentPath.startsWith('~/')) {
+                currentPath = GLib.build_filenamev([GLib.get_home_dir(), currentPath.substring(2)]);
+              }
+              GLib.file_set_contents(currentPath, JSON.stringify(importedMenus, null, 2));
+              refreshConfig();
+            } catch (e) {
+              const errorDialog = new Gtk.MessageDialog({
+                modal: true,
+                transient_for: this.get_root(),
+                message_type: Gtk.MessageType.ERROR,
+                buttons: Gtk.ButtonsType.OK,
+                text: gettext("Could not import configuration."),
+                secondary_text: e.message,
+              });
+              errorDialog.connect('response', d => d.destroy());
+              errorDialog.show();
+            }
+          }
+          confirmDlg.destroy();
+        });
+        confirmDialog.show();
+      });
+
+      dialog.show();
+    });
+
+    const exportConfigBtn = new Gtk.Button();
+    const exportIcon = Gtk.Image.new_from_icon_name('document-save-symbolic');
+    const exportLabel = new Gtk.Label({ label: gettext('Export') });
+    const exportButtonBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+    });
+    exportButtonBox.append(exportIcon);
+    exportButtonBox.append(exportLabel);
+    exportConfigBtn.set_child(exportButtonBox);
+    exportConfigBtn.set_tooltip_text(gettext("Export your current configuration"));
+    exportConfigBtn.connect('clicked', () => {
+      const dialog = new Gtk.FileChooserDialog({
+        title: gettext("Export Current Configuration"),
+        action: Gtk.FileChooserAction.SAVE,
+        transient_for: this.get_root(),
+        modal: true,
+      });
+      dialog.add_button("_Cancel", Gtk.ResponseType.CANCEL);
+      dialog.add_button("_Export", Gtk.ResponseType.OK);
+      let currentPath = this._settings.get_string('config-filepath');
+      if (currentPath.startsWith('~/'))
+        currentPath = GLib.build_filenamev([GLib.get_home_dir(), currentPath.substring(2)]);
+      dialog.set_current_name(GLib.path_get_basename(currentPath));
+      dialog.connect('response', (dlg, response) => {
+        if (response === Gtk.ResponseType.OK) {
+          const file = dlg.get_file();
+          const path = file.get_path();
+          try {
+            const contents = GLib.file_get_contents(currentPath)[1];
+            GLib.file_set_contents(path, contents);
+          } catch (e) {
+            const errorDialog = new Gtk.MessageDialog({
+              modal: true,
+              transient_for: this.get_root(),
+              message_type: Gtk.MessageType.ERROR,
+              buttons: Gtk.ButtonsType.OK,
+              text: gettext("Could not export configuration."),
+              secondary_text: e.message,
+            });
+            errorDialog.connect('response', d => d.destroy());
+            errorDialog.show();
+          }
+        }
+        dlg.destroy();
+      });
+      dialog.show();
+    });
+
+    importExportBox.append(importConfigBtn);
+    importExportBox.append(exportConfigBtn);
+
     group.add(editManuallyBox);
+    group.add(importExportBox);
 
     // 'Your Menus' section
     const group2 = new Adw.PreferencesGroup({ title: gettext("Your Menus:") });
@@ -385,9 +534,6 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
       // 3 dot menu w/ remove, up and down
       const gMenu = new Gio.Menu();
-      // gMenu.append(gettext('Move up'), 'row.up');
-      // gMenu.append(gettext('Move down'), 'row.down');
-      // gMenu.append(gettext('Delete'), 'row.delete');
       gMenu.append(gettext('Move up'), 'row.up');
       gMenu.append(gettext('Move down'), 'row.down');
       gMenu.append(gettext('Duplicate'), 'row.duplicate');
