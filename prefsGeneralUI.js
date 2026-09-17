@@ -29,43 +29,43 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         name: "Basic Menu",
         image: "icons/basic-menu.jpg",
         sourceFile: "examples/basic-menu.json",
-        description: "Browser, files and terminal. That's it!",
+        description: "A simple menu with just a browser, files and terminal.",
       },
       {
         name: "Apple Menu",
         image: "icons/apple-menu.jpg",
         sourceFile: "examples/apple-menu.json",
-        description: "An Apple-inspired menu... on Linux.",
+        description: "Apple-inspired menu on Linux.",
       },
       {
         name: "Files Menu",
         image: "icons/files-menu.jpg",
         sourceFile: "examples/files-menu.json",
-        description: "Access your important files/folders.",
+        description: "Access your files/folders.",
       },
       {
         name: "Kitchen Sink Menu",
         image: "icons/kitchen-sink-menu.jpg",
         sourceFile: "examples/kitchen-sink-menu.json",
-        description: "A bit of everything. Lots of useful controls and utilities.",
+        description: "A bit of everything!",
       },
       {
         name: "System Menu",
         image: "icons/system-menu.jpg",
         sourceFile: "examples/system-menu.json",
-        description: "Some system utilities and settings.",
+        description: "Basic system status, access to settings, and a power menu.",
       },
       {
         name: "System Stats Menu",
         image: "icons/system-stats-menu.jpg",
         sourceFile: "examples/system-stats-menu.json",
-        description: "Live system stats and useful system information.",
+        description: "View live system info (CPU, memory, disk usage, etc.).",
       },
       {
         name: "Vibes Menu",
         image: "icons/vibes-menu.jpg",
         sourceFile: "examples/vibes-menu.json",
-        description: "Display, focus and power toggles.",
+        description: "Change GNOME's appearance (light/dark mode, animations, etc.).",
       },
       {
         name: "Wi-Fi Menu",
@@ -83,13 +83,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         name: "Weather Button",
         image: "icons/weather-button.jpg",
         sourceFile: "examples/weather-button.json",
-        description: "A button showing live weather at a glance.",
+        description: "Shows live weather conditions in title.",
       },
       {
         name: "Public IP Button",
         image: "icons/public-ip-button.jpg",
         sourceFile: "examples/public-ip-button.json",
-        description: "A button showing your current public IP address.",
+        description: "Shows your current public IP address in title.",
       },
     ];
 
@@ -104,86 +104,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     // 'Configuration File' section
     const group = new Adw.PreferencesGroup({ title: gettext("Configuration File:") });
-    const editManuallyBox = new Gtk.Box({
-      orientation: Gtk.Orientation.HORIZONTAL,
-      spacing: 6,
-      halign: Gtk.Align.FILL,
-      hexpand: true
-    });
-
-    // edit btn
-    const editConfigButton = new Gtk.Button({
-      halign: Gtk.Align.START,
-      label: gettext('Edit Manually'),
-    });
-    editConfigButton.connect("clicked", () => {
-      let path = this._settings.get_string('config-filepath');
-      if (path.startsWith('~/'))
-        path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(2)]);
-      const file = Gio.File.new_for_path(path);
-      const defaultTextApp = Gio.AppInfo.get_default_for_type('text/plain', false);
-      if (defaultTextApp) {
-        defaultTextApp.launch([file], null);
-      } else {
-        Gio.AppInfo.launch_default_for_uri(file.get_uri(), null);
-      }
-    });
-    editManuallyBox.append(editConfigButton);
-
-    // refresh btn
-    const refreshConfigBtn = new Gtk.Button({ icon_name: 'view-refresh-symbolic', halign: Gtk.Align.START });
-    refreshConfigBtn.set_tooltip_text(gettext("Refresh from configuration file"));
-    refreshConfigBtn.connect('clicked', () => refreshConfig());
-    editManuallyBox.append(refreshConfigBtn);
-
-    // show current config path
-    const configPathEntry = new Gtk.Entry({
-      hexpand: true,
-      editable: false,
-      text: this._settings.get_string('config-filepath'),
-    });
-    configPathEntry.get_style_context().add_class('gtk-disabled');
-    editManuallyBox.append(configPathEntry);
-
-    // change config filepath btn
-    const changeConfigFilepathBtn = new Gtk.Button({ icon_name: 'document-edit-symbolic', halign: Gtk.Align.END });
-    changeConfigFilepathBtn.set_tooltip_text(gettext("Change configuration file location"));
-    changeConfigFilepathBtn.connect('clicked', () => {
-      const dialog = new Gtk.FileChooserDialog({
-        title: "Select Command Menu Config",
-        action: Gtk.FileChooserAction.SAVE,
-        transient_for: this.get_root(),
-        modal: true,
-      });
-      dialog.add_button("_Cancel", Gtk.ResponseType.CANCEL);
-      dialog.add_button("_Select", Gtk.ResponseType.OK);
-      let filepath = this._settings.get_string('config-filepath');
-      if (filepath.startsWith('~/'))
-        filepath = GLib.build_filenamev([GLib.get_home_dir(), filepath.substring(2)]);
-      const filename = GLib.path_get_basename(filepath);
-      const dir = GLib.path_get_dirname(filepath);
-      dialog.set_current_folder(Gio.File.new_for_path(dir));
-      dialog.set_current_name(filename);
-      dialog.connect('response', (dlg, response) => {
-        if (response === Gtk.ResponseType.OK) {
-          const file = dialog.get_file();
-          const path = file.get_path();
-          this._settings.set_string('config-filepath', path);
-          configPathEntry.set_text(path);
-          GLib.file_set_contents(path, JSON.stringify(this._menus, null, 2));
-          refreshConfig();
-        }
-        dlg.destroy();
-      });
-      dialog.show();
-    });
-    editManuallyBox.append(changeConfigFilepathBtn);
 
     // import / export configuration buttons
     const importExportBox = new Gtk.Box({
       orientation: Gtk.Orientation.HORIZONTAL,
       spacing: 6,
-      halign: Gtk.Align.START,
+      halign: Gtk.Align.FILL,
+      hexpand: true,
       margin_top: 6,
     });
 
@@ -327,8 +254,89 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     importExportBox.append(importConfigBtn);
     importExportBox.append(exportConfigBtn);
 
-    group.add(editManuallyBox);
+    // edit btn
+    const editConfigButton = new Gtk.Button({
+      halign: Gtk.Align.END,
+      label: gettext('Edit Manually'),
+    });
+    editConfigButton.connect("clicked", () => {
+      let path = this._settings.get_string('config-filepath');
+      if (path.startsWith('~/'))
+        path = GLib.build_filenamev([GLib.get_home_dir(), path.substring(2)]);
+      const file = Gio.File.new_for_path(path);
+      const defaultTextApp = Gio.AppInfo.get_default_for_type('text/plain', false);
+      if (defaultTextApp) {
+        defaultTextApp.launch([file], null);
+      } else {
+        Gio.AppInfo.launch_default_for_uri(file.get_uri(), null);
+      }
+    });
+
+    // refresh btn
+    const refreshConfigBtn = new Gtk.Button({ icon_name: 'view-refresh-symbolic', halign: Gtk.Align.END });
+    refreshConfigBtn.set_tooltip_text(gettext("Refresh from configuration file"));
+    refreshConfigBtn.connect('clicked', () => refreshConfig());
+
+    const spacer = new Gtk.Box({
+      hexpand: true,
+    });
+    importExportBox.append(spacer);
+    importExportBox.append(refreshConfigBtn);
+    importExportBox.append(editConfigButton);
+
+    // show current config path
+    const configPathBox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+      halign: Gtk.Align.FILL,
+      hexpand: true,
+      margin_top: 6,
+    });
+
+    const configPathEntry = new Gtk.Entry({
+      hexpand: true,
+      editable: false,
+      text: this._settings.get_string('config-filepath'),
+    });
+    configPathBox.append(configPathEntry);
+
+    // change config filepath btn
+    const changeConfigFilepathBtn = new Gtk.Button({ icon_name: 'document-edit-symbolic', halign: Gtk.Align.END });
+    changeConfigFilepathBtn.set_tooltip_text(gettext("Change configuration file location"));
+    changeConfigFilepathBtn.connect('clicked', () => {
+      const dialog = new Gtk.FileChooserDialog({
+        title: "Select Command Menu Config",
+        action: Gtk.FileChooserAction.SAVE,
+        transient_for: this.get_root(),
+        modal: true,
+      });
+      dialog.add_button("_Cancel", Gtk.ResponseType.CANCEL);
+      dialog.add_button("_Select", Gtk.ResponseType.OK);
+      let filepath = this._settings.get_string('config-filepath');
+      if (filepath.startsWith('~/'))
+        filepath = GLib.build_filenamev([GLib.get_home_dir(), filepath.substring(2)]);
+      const filename = GLib.path_get_basename(filepath);
+      const dir = GLib.path_get_dirname(filepath);
+      dialog.set_current_folder(Gio.File.new_for_path(dir));
+      dialog.set_current_name(filename);
+      dialog.connect('response', (dlg, response) => {
+        if (response === Gtk.ResponseType.OK) {
+          const file = dialog.get_file();
+          const path = file.get_path();
+          this._settings.set_string('config-filepath', path);
+          configPathEntry.set_text(path);
+          GLib.file_set_contents(path, JSON.stringify(this._menus, null, 2));
+          refreshConfig();
+        }
+        dlg.destroy();
+      });
+      dialog.show();
+    });
+
+    configPathBox.append(changeConfigFilepathBtn);
+
     group.add(importExportBox);
+    group.add(configPathBox);
 
     // 'Your Menus' section
     const group2 = new Adw.PreferencesGroup({ title: gettext("Your Menus:") });
@@ -386,6 +394,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
     const templatesFlowBox = new Gtk.FlowBox({
       selection_mode: Gtk.SelectionMode.NONE,
       row_spacing: 6,
+      min_children_per_line: 2,
     });
     for (const template of templates) {
       const vbox = new Gtk.Box({
@@ -495,6 +504,8 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       }
 
       const labelEnd = new Gtk.Label({ label: menu.title || '', });
+      labelEnd.set_max_width_chars(30);
+      labelEnd.set_ellipsize(3);
       const leftBox = new Gtk.Box({ spacing: 6 });
       leftBox.set_hexpand(true);
       leftBox.set_halign(Gtk.Align.START);
