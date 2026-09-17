@@ -1,0 +1,8 @@
+{
+  "title": "$(curl -s --max-time 10 'wttr.in/?format=3' || echo 'Weather unavailable')",
+  "dynamicTitle": true,
+  "refreshInterval": 30,
+  "position": "center",
+  "type": "button",
+  "command": "xdg-open 'https://wttr.in/'"
+}

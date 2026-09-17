@@ -1,0 +1,40 @@
+{
+    "title": "Settings",
+    "position": "center",
+    "icon": "preferences-system-symbolic",
+    "menu": [
+        {
+            "title": "Settings",
+            "command": "gnome-control-center",
+            "icon": "preferences-system-symbolic"
+        },
+        {
+            "title": "Extensions",
+            "command": "bash -c 'if [ -z \"$(which extension-manager)\" ]; then flatpak run com.mattjakeman.ExtensionManager; else extension-manager; fi'",
+            "icon": "preferences-other-symbolic"
+        },
+        {
+            "title": "System Monitor",
+            "command": "gnome-system-monitor",
+            "icon": "utilities-system-monitor-symbolic"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Startup Applications",
+            "command": "gnome-session-properties",
+            "icon": "application-x-executable-symbolic"
+        },
+        {
+            "title": "Default Applications",
+            "command": "gnome-control-center default-apps",
+            "icon": "applications-system-symbolic"
+        },
+        {
+            "title": "About This System",
+            "command": "gnome-control-center system",
+            "icon": "computer-symbolic"
+        }
+    ]
+}

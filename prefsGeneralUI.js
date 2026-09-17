@@ -14,14 +14,84 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
   }
 
   _init(params = {}) {
-    const { menus, addMenu, removeMenu, moveMenu, showMenuEditor, refreshConfig, settings, ...args } = params;
+    const { menus, addMenu, duplicateMenu, removeMenu, moveMenu, showMenuEditor, refreshConfig, settings, ...args } = params;
     super._init(args);
 
     this._menus = menus;
     this._removeMenu = removeMenu;
     this._moveMenu = moveMenu;
+    this._duplicateMenu = duplicateMenu;
     this._showMenuEditor = showMenuEditor;
     this._settings = settings;
+
+    const templates = [
+      {
+        name: "Basic Menu",
+        image: "icons/basic-menu.jpg",
+        sourceFile: "examples/basic-menu.json",
+        description: "Browser, files and terminal. That's it!",
+      },
+      {
+        name: "Apple Menu",
+        image: "icons/apple-menu.jpg",
+        sourceFile: "examples/apple-menu.json",
+        description: "An Apple-inspired menu... on Linux.",
+      },
+      {
+        name: "Files Menu",
+        image: "icons/files-menu.jpg",
+        sourceFile: "examples/files-menu.json",
+        description: "Access your important files/folders.",
+      },
+      {
+        name: "Kitchen Sink Menu",
+        image: "icons/kitchen-sink-menu.jpg",
+        sourceFile: "examples/kitchen-sink-menu.json",
+        description: "A bit of everything. Lots of useful controls and utilities.",
+      },
+      {
+        name: "System Menu",
+        image: "icons/system-menu.jpg",
+        sourceFile: "examples/system-menu.json",
+        description: "Some system utilities and settings.",
+      },
+      {
+        name: "System Stats Menu",
+        image: "icons/system-stats-menu.jpg",
+        sourceFile: "examples/system-stats-menu.json",
+        description: "Live system stats and useful system information.",
+      },
+      {
+        name: "Vibes Menu",
+        image: "icons/vibes-menu.jpg",
+        sourceFile: "examples/vibes-menu.json",
+        description: "Display, focus and power toggles.",
+      },
+      {
+        name: "Wi-Fi Menu",
+        image: "icons/wifi-menu.jpg",
+        sourceFile: "examples/wifi-menu.json",
+        description: "Wi-Fi toggle with live connection status in the title.",
+      },
+      {
+        name: "Power Menu",
+        image: "icons/power-menu.jpg",
+        sourceFile: "examples/power-menu.json",
+        description: "Lock, suspend, restart and shut down.",
+      },
+      {
+        name: "Weather Button",
+        image: "icons/weather-button.jpg",
+        sourceFile: "examples/weather-button.json",
+        description: "A button showing live weather at a glance.",
+      },
+      {
+        name: "Public IP Button",
+        image: "icons/public-ip-button.jpg",
+        sourceFile: "examples/public-ip-button.json",
+        description: "A button showing your current public IP address.",
+      },
+    ];
 
     // description section
     const group0 = new Adw.PreferencesGroup();
@@ -148,7 +218,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         type: 'button',
         title: `Button ${this._menus.length + 1}`,
         icon: 'input-mouse-symbolic',
-        position: 'left',
+        command: `bash -c 'action=$(notify-send -w -A "customize=Customize this menu" -A "cancel=Cancel" "Customize this menu?" "Open extension preferences to customize this button."); [ "$action" = "customize" ] && gnome-extensions prefs command-menu2@goldentree1.github.com'`,
       });
     });
     addButtonsBox.append(addMenuButton);
@@ -164,74 +234,6 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
     // 'Templates' section
     const group3 = new Adw.PreferencesGroup({ title: gettext("Templates:") });
-    const templates = [
-      {
-        name: "Simple Apps Menu",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/simplemenu.json",
-        description: "Browser, files and terminal. That's it!",
-      },
-      {
-        name: "Apple Menu",
-        image: "icons/applemenu.jpg",
-        sourceFile: "examples/applemenu.json",
-        description: "An Apple-inspired menu... on Linux.",
-      },
-      {
-        name: "Files Menu",
-        image: "icons/filesmenu.jpg",
-        sourceFile: "examples/filesmenu.json",
-        description: "Access your important files/folders.",
-      },
-      {
-        name: "Penguin Menu",
-        image: "icons/penguinmenu.jpg",
-        sourceFile: "examples/penguinmenu.json",
-        description: "It has a penguin! And lots more.",
-      },
-      {
-        name: "System Menu",
-        image: "icons/systemmenu.jpg",
-        sourceFile: "examples/systemmenu.json",
-        description: "Some system utilities and settings.",
-      },
-      {
-        name: "Vibes Menu",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/vibesmenu.json",
-        description: "Display, focus and power toggles.",
-      },
-      {
-        name: "Wi-Fi Menu",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/wifi-menu.json",
-        description: "Wi-Fi toggle with live connection status in the title.",
-      },
-      {
-        name: "Power Menu",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/powermenu.json",
-        description: "Lock, suspend, restart and shut down.",
-      },
-      {
-        name: "Power Profiles",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/powerprofilesmenu.json",
-        description: "Switch power profiles on the fly.",
-      },
-      {
-        name: "Date & Time Menu",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/datetimemenu.json",
-        description: "Live clock with weather and uptime.",
-      },
-      {
-        name: "IP Button",
-        image: "icons/simplemenu.jpg",
-        sourceFile: "examples/ip-button.json",
-        description: "A button, not a menu: network status at a glance.",
-      },
-    ];
     const templatesFlowBox = new Gtk.FlowBox({
       selection_mode: Gtk.SelectionMode.NONE,
       row_spacing: 6,
@@ -383,8 +385,12 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
 
       // 3 dot menu w/ remove, up and down
       const gMenu = new Gio.Menu();
+      // gMenu.append(gettext('Move up'), 'row.up');
+      // gMenu.append(gettext('Move down'), 'row.down');
+      // gMenu.append(gettext('Delete'), 'row.delete');
       gMenu.append(gettext('Move up'), 'row.up');
       gMenu.append(gettext('Move down'), 'row.down');
+      gMenu.append(gettext('Duplicate'), 'row.duplicate');
       gMenu.append(gettext('Delete'), 'row.delete');
 
       const menuButton = new Gtk.MenuButton({
@@ -395,6 +401,13 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
       });
 
       const actionGroup = new Gio.SimpleActionGroup();
+
+      const duplicateAction = new Gio.SimpleAction({ name: 'duplicate' });
+      duplicateAction.connect('activate', () => {
+        this._duplicateMenu(i);
+      });
+      actionGroup.add_action(duplicateAction);
+
       const deleteAction = new Gio.SimpleAction({ name: 'delete' });
       deleteAction.connect('activate', () => {
         const dialog = new Gtk.MessageDialog({

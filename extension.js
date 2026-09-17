@@ -158,7 +158,7 @@ const CommandMenuPopup = GObject.registerClass(
       entry.sourceId = 0;
     }
 
-    async _resolveDynamicTitle(label, template) {
+    async _asyncResolveDynamicTitle(label, template) {
       if (typeof template !== 'string' || !template.includes('$(')) {
         label.text = template;
         return;
@@ -188,13 +188,13 @@ const CommandMenuPopup = GObject.registerClass(
 
       if (!parentMenu) {
         // no parent: always refresh
-        this._startTimer(entry, interval, () => this._resolveDynamicTitle(label, template));
+        this._startTimer(entry, interval, () => this._asyncResolveDynamicTitle(label, template));
       } else {
         // refresh only while parent menu is open
         this.connectSignal(parentMenu, 'open-state-changed', (_menu, open) => {
           if (open) {
-            this._resolveDynamicTitle(label, template);
-            this._startTimer(entry, interval, () => this._resolveDynamicTitle(label, template));
+            this._asyncResolveDynamicTitle(label, template);
+            this._startTimer(entry, interval, () => this._asyncResolveDynamicTitle(label, template));
           } else this._stopTimer(entry);
         })
       }
@@ -300,18 +300,11 @@ const CommandMenuPopup = GObject.registerClass(
         this._clickGesture.set_enabled(true);
       } else {
         // menu mode: populate menu items
-        if ((!Array.isArray(this.commands.menu) || this.commands.menu.length === 0)) {
-          this.commands.menu = [{
-            title: "Customize This Menu...",
-            icon: 'preferences-system-symbolic',
-            command: `gnome-extensions prefs ${this.uuid}`
-          }];
-        }
         this.populateMenuItems(this.menu, this.commands.menu, 0);
       }
 
       // one-shot update all dynamic labels
-      this._dynamicLabels.forEach(({ label, template }) => this._resolveDynamicTitle(label, template));
+      this._dynamicLabels.forEach(({ label, template }) => this._asyncResolveDynamicTitle(label, template));
     }
   });
 

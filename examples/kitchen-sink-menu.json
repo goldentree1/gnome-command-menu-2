@@ -20,12 +20,12 @@
         },
         {
             "title": "Terminal",
-            "command": "gnome-terminal",
+            "command": "x-terminal-emulator",
             "icon": "utilities-terminal-symbolic"
         },
         {
             "title": "Web Browser",
-            "command": "xdg-open https://",
+            "command": "gtk-launch $(xdg-settings get default-web-browser)",
             "icon": "web-browser-symbolic"
         },
         {
@@ -35,32 +35,32 @@
             "submenu": [
                 {
                     "title": "Home",
-                    "command": "xdg-open \"$HOME\"",
+                    "command": "xdg-open ~",
                     "icon": "user-home-symbolic"
                 },
                 {
                     "title": "Downloads",
-                    "command": "xdg-open \"$HOME/Downloads\"",
+                    "command": "xdg-open ~/Downloads",
                     "icon": "folder-download-symbolic"
                 },
                 {
                     "title": "Documents",
-                    "command": "xdg-open \"$HOME/Documents\"",
+                    "command": "xdg-open ~/Documents",
                     "icon": "folder-documents-symbolic"
                 },
                 {
                     "title": "Pictures",
-                    "command": "xdg-open \"$HOME/Pictures\"",
+                    "command": "xdg-open ~/Pictures",
                     "icon": "folder-pictures-symbolic"
                 },
                 {
                     "title": "Music",
-                    "command": "xdg-open \"$HOME/Music\"",
+                    "command": "xdg-open ~/Music",
                     "icon": "folder-music-symbolic"
                 },
                 {
                     "title": "Videos",
-                    "command": "xdg-open \"$HOME/Videos\"",
+                    "command": "xdg-open ~/Videos",
                     "icon": "folder-videos-symbolic"
                 }
             ]

@@ -1,0 +1,28 @@
+{
+    "icon": "utilities-terminal-symbolic",
+    "menu": [
+        {
+            "title": "Web Browser",
+            "command": "gtk-launch $(xdg-settings get default-web-browser)",
+            "icon": "web-browser-symbolic"
+        },
+        {
+            "title": "Files",
+            "command": "xdg-open \"$HOME\"",
+            "icon": "folder"
+        },
+        {
+            "title": "Terminal",
+            "command": "x-terminal-emulator",
+            "icon": "utilities-terminal"
+        },
+        {
+            "type": "separator"
+        },
+        {
+            "title": "Customize this menu...",
+            "icon": "preferences-system-symbolic",
+            "command": "gnome-extensions prefs command-menu2@goldentree1.github.com"
+        }
+    ]
+}

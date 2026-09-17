@@ -13,7 +13,7 @@
     },
     {
       "type": "label",
-      "title": "LAN: $(hostname -I | cut -d' ' -f1 | grep -v '^$' || echo 'no connection')$(ip route | grep default | cut -d' ' -f3 | grep -v '^$' | sed 's/^/ via /')",
+      "title": "LAN: $(hostname -I | cut -d' ' -f1 | grep -v '^$' || echo 'no connection') ($(ip route | grep default | cut -d' ' -f3 | grep -v '^$' | sed 's/^/via /'))",
       "dynamicTitle": true,
       "refreshInterval": 6
     },

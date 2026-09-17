@@ -23,12 +23,20 @@ export default class CommandMenuExtensionPreferences extends ExtensionPreference
       addMenu: (template = null) => {
         mutateMenus(m => {
           const addMe = template || {
-            menu: [],
             title: `Menu ${m.length + 1}`,
-            icon: 'utilities-terminal',
-            position: 'left'
+            icon: "utilities-terminal-symbolic",
+            menu: [{
+              title: "Customize this menu...",
+              icon: "preferences-system-symbolic",
+              command: "gnome-extensions prefs command-menu2@goldentree1.github.com",
+            }]
           };
           m.push(addMe);
+        });
+      },
+      duplicateMenu: (idx) => {
+        mutateMenus(m => {
+          m.splice(idx + 1, 0, JSON.parse(JSON.stringify(m[idx])));
         });
       },
       removeMenu: (rmIdx) => {
