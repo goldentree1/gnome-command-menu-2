@@ -277,7 +277,7 @@ const CommandMenuPopup = GObject.registerClass(
 
       // add menu title
       let text = new St.Label({
-        text: menuTitle,
+        text: this.commands.dynamicTitle ? '...' : menuTitle,
         y_expand: true,
         y_align: Clutter.ActorAlign.CENTER
       });
