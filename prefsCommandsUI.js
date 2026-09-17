@@ -1,8 +1,8 @@
-/* commandsUI.js 
+/* commandsUI.js
  *
  * This file is part of the Custom Command Menu GNOME Shell extension
  * https://github.com/StorageB/custom-command-menu
- * 
+ *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
@@ -509,7 +509,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 iconBox.append(findIconButton);
                 row.add_row(iconBox);
 
-                // command editors, keep the object shape
+                // commands editor for toggle items
                 const entryRowCommandOn = new Adw.EntryRow({
                     title: _('On command:'),
                     text: item.command?.on || '',
@@ -541,44 +541,8 @@ export default class CommandsUI extends Adw.PreferencesPage {
                 entryRowCommandOff.connect('notify::text', syncCommand);
                 entryRowMonitor.connect('notify::text', syncCommand);
 
-                const onBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
-                const chooseOnButton = new Gtk.Button({
-                    label: _('Apps...'),
-                    halign: Gtk.Align.END,
-                    margin_bottom: 5,
-                    margin_top: 5,
-                    margin_start: 8,
-                    margin_end: 8,
-                });
-                chooseOnButton.connect('clicked', () => {
-                    const dialog = new CmdChooser(this.get_root(), (cli) => {
-                        if (cli) entryRowCommandOn.set_text(cli);
-                    });
-                    dialog.present();
-                });
-                onBox.append(entryRowCommandOn);
-                onBox.append(chooseOnButton);
-
-                const offBox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL });
-                const chooseOffButton = new Gtk.Button({
-                    label: _('Apps...'),
-                    halign: Gtk.Align.END,
-                    margin_bottom: 5,
-                    margin_top: 5,
-                    margin_start: 8,
-                    margin_end: 8,
-                });
-                chooseOffButton.connect('clicked', () => {
-                    const dialog = new CmdChooser(this.get_root(), (cli) => {
-                        if (cli) entryRowCommandOff.set_text(cli);
-                    });
-                    dialog.present();
-                });
-                offBox.append(entryRowCommandOff);
-                offBox.append(chooseOffButton);
-
-                row.add_row(onBox);
-                row.add_row(offBox);
+                row.add_row(entryRowCommandOn);
+                row.add_row(entryRowCommandOff);
                 row.add_row(entryRowMonitor);
             } else if (item.command) {
                 row.set_title(item.title || _('Untitled'));
@@ -828,7 +792,7 @@ export default class CommandsUI extends Adw.PreferencesPage {
         sync();
     }
 
-    /** 
+    /**
      * Listbox doesnt support nesting, but we've done it by adding _depth var to list.
      * This converts list's depth-based menu to the .commands.json menu
      */

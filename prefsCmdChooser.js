@@ -27,9 +27,12 @@ export default class CmdChooser extends Gtk.Dialog {
             margin_end: 12,
         });
         const scrolled = new Gtk.ScrolledWindow({ vexpand: true });
-        
+
         // add apps to list
-        const apps = Gio.AppInfo.get_all().filter(a => a.should_show() && a.get_commandline()).sort();
+        const apps = Gio.AppInfo.get_all()
+          .filter(a => a.should_show() && a.get_commandline())
+          .sort((a, b) => a.get_display_name().localeCompare(b.get_display_name()));
+
         const list = new Gtk.ListBox({ selection_mode: Gtk.SelectionMode.SINGLE });
         for (const app of apps) {
             const row = new Gtk.ListBoxRow();
@@ -60,7 +63,7 @@ export default class CmdChooser extends Gtk.Dialog {
         // cancel btn
         scrolled.set_child(list);
         const cancelBtn = new Gtk.Button({ label: 'Cancel' });
-        
+
         // listeners
         list.connect('row-activated', (_, row) => {
             const cmd = row.appInfo

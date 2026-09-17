@@ -7,7 +7,7 @@ import GeneralPreferencesPage from './prefsGeneralUI.js';
 
 export default class CommandMenuExtensionPreferences extends ExtensionPreferences {
   fillPreferencesWindow(window) {
-    window.set_default_size(750, 850);
+    window.set_default_size(900, 800);
 
     const settings = this.getSettings();
     const menus = loadConfig();

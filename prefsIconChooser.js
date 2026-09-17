@@ -14,8 +14,8 @@ export default class IconChooser extends Gtk.Dialog {
             transient_for: parent,
             modal: true,
             title: 'Choose Icon',
-            default_width: 600,
-            default_height: 500,
+            default_width: 900,
+            default_height: 700,
         });
 
         const layout = new Gtk.Box({
@@ -56,7 +56,7 @@ export default class IconChooser extends Gtk.Dialog {
             'system-search-symbolic',
             'view-refresh-symbolic',
             'help-about-symbolic',
-        ];
+        ].sort((a, b) => a.localeCompare(b));
         const systemBox = new Gtk.ListBox({
             selection_mode: Gtk.SelectionMode.SINGLE,
             vexpand: true,
@@ -80,7 +80,9 @@ export default class IconChooser extends Gtk.Dialog {
             vexpand: true,
             min_content_height: 400,
         });
-        const apps = Gio.AppInfo.get_all().filter(a => a.should_show() && a.get_icon());
+        const apps = Gio.AppInfo.get_all()
+            .filter(a => a.should_show() && a.get_icon())
+            .sort((a, b) => a.get_icon().to_string().localeCompare(b.get_icon().to_string()));
         const appBox = new Gtk.ListBox({
             selection_mode: Gtk.SelectionMode.SINGLE,
             vexpand: true,
