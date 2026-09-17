@@ -427,6 +427,7 @@ export default class GeneralPreferencesPage extends Adw.PreferencesPage {
         wrap: true,
         label: template.description || 'No description provided.',
         halign: Gtk.Align.CENTER,
+        hexpand: true,
       });
       desc.set_justify(Gtk.Justification.CENTER);
       desc.add_css_class("caption");
